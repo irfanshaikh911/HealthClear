@@ -2,11 +2,42 @@ from supabase import Client
 
 
 HOSPITALS = [
-    {"name": "Ruby Hall Clinic", "city": "Pune", "base_cost": 50000.0, "success_rate": 0.92, "base_complication_rate": 0.05, "average_recovery_days": 5, "room_cost_per_day": 3500.0},
-    {"name": "Sahyadri Super Speciality Hospital", "city": "Pune", "base_cost": 45000.0, "success_rate": 0.89, "base_complication_rate": 0.06, "average_recovery_days": 6, "room_cost_per_day": 3000.0},
-    {"name": "Jehangir Hospital", "city": "Pune", "base_cost": 55000.0, "success_rate": 0.94, "base_complication_rate": 0.04, "average_recovery_days": 4, "room_cost_per_day": 4000.0},
-    {"name": "KEM Hospital", "city": "Pune", "base_cost": 30000.0, "success_rate": 0.85, "base_complication_rate": 0.08, "average_recovery_days": 7, "room_cost_per_day": 2000.0},
-    {"name": "Deenanath Mangeshkar Hospital", "city": "Pune", "base_cost": 48000.0, "success_rate": 0.91, "base_complication_rate": 0.055, "average_recovery_days": 5, "room_cost_per_day": 3200.0},
+    {
+        "name": "Ruby Hall Clinic", "city": "Pune",
+        "base_cost": 50000.0, "success_rate": 0.92,
+        "base_complication_rate": 0.05, "average_recovery_days": 5,
+        "room_cost_per_day": 3500.0,
+        "accepts_insurance": True, "insurance_coverage_pct": 0.75,
+    },
+    {
+        "name": "Sahyadri Super Speciality Hospital", "city": "Pune",
+        "base_cost": 45000.0, "success_rate": 0.89,
+        "base_complication_rate": 0.06, "average_recovery_days": 6,
+        "room_cost_per_day": 3000.0,
+        "accepts_insurance": True, "insurance_coverage_pct": 0.70,
+    },
+    {
+        "name": "Jehangir Hospital", "city": "Pune",
+        "base_cost": 55000.0, "success_rate": 0.94,
+        "base_complication_rate": 0.04, "average_recovery_days": 4,
+        "room_cost_per_day": 4000.0,
+        "accepts_insurance": True, "insurance_coverage_pct": 0.80,
+    },
+    {
+        # Government-affiliated — Ayushman Bharat empanelled (covers up to ₹5L)
+        "name": "KEM Hospital", "city": "Pune",
+        "base_cost": 30000.0, "success_rate": 0.85,
+        "base_complication_rate": 0.08, "average_recovery_days": 7,
+        "room_cost_per_day": 2000.0,
+        "accepts_insurance": True, "insurance_coverage_pct": 1.00,
+    },
+    {
+        "name": "Deenanath Mangeshkar Hospital", "city": "Pune",
+        "base_cost": 48000.0, "success_rate": 0.91,
+        "base_complication_rate": 0.055, "average_recovery_days": 5,
+        "room_cost_per_day": 3200.0,
+        "accepts_insurance": True, "insurance_coverage_pct": 0.72,
+    },
 ]
 
 PROCEDURES = [
@@ -44,21 +75,53 @@ RISK_CONDITIONS = [
 
 
 def seed(client: Client) -> None:
-    # ── Hospitals (insert once) ─────────────────────────────────────────────
-    existing_hospitals = client.table("hospitals").select("id").execute().data
-    if not existing_hospitals:
-        client.table("hospitals").insert(HOSPITALS).execute()
-        print("  ✓ Seeded hospitals.")
+    # ── Hospitals ───────────────────────────────────────────────────────────
+    # Fetch existing hospitals keyed by name (take the first occurrence if duplicates).
+    existing: dict = {}
+    for row in (client.table("hospitals").select("id,name").execute().data or []):
+        if row["name"] not in existing:   # keep first occurrence only
+            existing[row["name"]] = row
+
+    to_insert = []
+    migration_needed = False
+
+    for h in HOSPITALS:
+        if h["name"] in existing:
+            row_id = existing[h["name"]]["id"]
+            try:
+                client.table("hospitals").update({
+                    "accepts_insurance":      h["accepts_insurance"],
+                    "insurance_coverage_pct": h["insurance_coverage_pct"],
+                }).eq("id", row_id).execute()
+            except Exception:
+                migration_needed = True  # columns probably don't exist yet
+        else:
+            to_insert.append(h)
+
+    if to_insert:
+        client.table("hospitals").insert(to_insert).execute()
+        print(f"  [OK] Inserted {len(to_insert)} new hospital(s).")
+
+    updated = len(HOSPITALS) - len(to_insert)
+    if migration_needed:
+        print(
+            "  [!!] INSURANCE COLUMNS MISSING — run this in Supabase SQL Editor:\n"
+            "       ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS"
+            " accepts_insurance BOOLEAN NOT NULL DEFAULT TRUE;\n"
+            "       ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS"
+            " insurance_coverage_pct NUMERIC NOT NULL DEFAULT 0.0;\n"
+            "       Then restart the server."
+        )
     else:
-        print("  · Hospitals already seeded, skipping.")
+        print(f"  [OK] Hospitals seeded: {updated} updated, {len(to_insert)} inserted.")
 
     # ── Procedures (upsert by name — adds new ones automatically) ──────────
     client.table("procedures").upsert(PROCEDURES, on_conflict="name").execute()
-    print(f"  ✓ Procedures upserted ({len(PROCEDURES)} total).")
+    print(f"  [OK] Procedures upserted ({len(PROCEDURES)} total).")
 
     # ── Risk Conditions (upsert by name) ────────────────────────────────────
     client.table("risk_conditions").upsert(RISK_CONDITIONS, on_conflict="name").execute()
-    print(f"  ✓ Risk conditions upserted ({len(RISK_CONDITIONS)} total).")
+    print(f"  [OK] Risk conditions upserted ({len(RISK_CONDITIONS)} total).")
 
     print("Seeding complete.")
 

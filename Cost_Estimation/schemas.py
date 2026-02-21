@@ -23,12 +23,17 @@ class HospitalResult(BaseModel):
     adjusted_complication: float
     recovery_days: int
     value_score: float
+    # Insurance fields
+    insurance_accepted: bool = True
+    amount_covered: float = 0.0        # ₹ covered by insurance
+    patient_out_of_pocket: float = 0.0 # net cost after insurance
 
 
 class PersonalizedSummary(BaseModel):
     estimated_cost_range: List[float]
     budget_fit: bool
     insurance_note: str
+    insurance_accepted_count: int = 0  # how many hospitals accept the patient's insurance
 
 
 class ChatResponse(BaseModel):
