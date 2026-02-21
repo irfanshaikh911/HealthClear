@@ -8,12 +8,23 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.bills import router as bills_router
+from app.api.assistant import router as assistant_router
+from app.db.supabase import get_supabase
+from app.services.seed_service import seed
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown events."""
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
+    # Seed cost-estimation reference data (hospitals, procedures, risk_conditions)
+    try:
+        client = get_supabase()
+        seed(client)
+    except Exception as e:
+        print(f"⚠️  Seed skipped: {e}")
+
     print(f"✅ {settings.APP_NAME} started!")
     yield
     print(f"⏹  {settings.APP_NAME} stopped.")
@@ -21,8 +32,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="AI-powered hospital bill verification using Gemini 2.0 Flash",
-    version="1.0.0",
+    description="AI-powered hospital bill verification & healthcare cost estimation",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -35,6 +46,7 @@ app.add_middleware(
 )
 
 app.include_router(bills_router)
+app.include_router(assistant_router)
 
 
 @app.get("/", tags=["Health"])

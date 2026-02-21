@@ -101,3 +101,43 @@ CREATE TABLE IF NOT EXISTS public.verification_reports (
     recommendations    TEXT,
     generated_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ============================================================
+-- AI Assistant: Cost Estimation Tables
+-- ============================================================
+
+-- 6. Procedures (cost estimation reference data)
+CREATE TABLE IF NOT EXISTS public.procedures (
+    id                      SERIAL PRIMARY KEY,
+    name                    TEXT NOT NULL UNIQUE,
+    base_cost               NUMERIC NOT NULL,
+    average_length_of_stay  INTEGER NOT NULL
+);
+
+-- 7. Risk Conditions (cost estimation risk factors)
+CREATE TABLE IF NOT EXISTS public.risk_conditions (
+    name                    TEXT PRIMARY KEY,
+    cost_multiplier         NUMERIC NOT NULL,
+    complication_multiplier NUMERIC NOT NULL
+);
+
+-- 8. Chat History (AI Assistant conversation log)
+CREATE TABLE IF NOT EXISTS public.chat_history (
+    id              SERIAL PRIMARY KEY,
+    session_id      TEXT NOT NULL UNIQUE,
+    patient_id      INTEGER,
+    messages        JSONB NOT NULL DEFAULT '[]',
+    answers         JSONB NOT NULL DEFAULT '{}',
+    result          JSONB,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Migration for existing hospitals table: add cost estimation columns
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS base_cost               NUMERIC DEFAULT 50000;
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS success_rate            NUMERIC DEFAULT 0.90;
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS base_complication_rate  NUMERIC DEFAULT 0.05;
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS average_recovery_days   INTEGER DEFAULT 5;
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS room_cost_per_day       NUMERIC DEFAULT 3000;
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS accepts_insurance       BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.hospitals ADD COLUMN IF NOT EXISTS insurance_coverage_pct  NUMERIC DEFAULT 0.0;

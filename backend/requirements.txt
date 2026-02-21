@@ -10,3 +10,5 @@ supabase
 groq
 PyPDF2
 Pillow
+langchain-groq
+langchain-core
