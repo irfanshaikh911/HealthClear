@@ -4,22 +4,33 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-// Hardcoded credentials for demo
-const VALID_CREDENTIALS = {
+// Hardcoded demo credentials
+const DEMO_CREDENTIALS = {
   email: 'patient@healthclear.com',
   password: 'health123'
 };
 
-const MOCK_USER = {
+const DEMO_USER = {
   name: 'Alex Johnson',
   email: 'patient@healthclear.com',
   bloodType: 'O+',
-  allergies: ['Penicillin'],
-  conditions: ['Mild Asthma'],
-  medications: ['Ventolin Inhaler (as needed)'],
+  allergies: 'Penicillin',
+  conditions: 'Mild Asthma',
+  medications: 'Ventolin Inhaler (as needed)',
   dob: '1992-04-15',
   gender: 'Male',
   profileComplete: true
+};
+
+// Helper: get registered users from localStorage
+const getRegisteredUsers = () => {
+  try {
+    return JSON.parse(localStorage.getItem('hc-registered-users') || '[]');
+  } catch { return []; }
+};
+
+const saveRegisteredUsers = (users) => {
+  localStorage.setItem('hc-registered-users', JSON.stringify(users));
 };
 
 export const AuthProvider = ({ children }) => {
@@ -28,13 +39,48 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const persistUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('hc-user', JSON.stringify(userData));
+  };
+
   const login = (email, password) => {
-    if (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password) {
-      setUser(MOCK_USER);
-      localStorage.setItem('hc-user', JSON.stringify(MOCK_USER));
+    // Check demo credentials first
+    if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
+      persistUser(DEMO_USER);
       return { success: true };
     }
-    return { success: false, error: 'Invalid credentials. Try patient@healthclear.com / health123' };
+    // Check registered users
+    const users = getRegisteredUsers();
+    const found = users.find(u => u.email === email && u.password === password);
+    if (found) {
+      const { password: _, ...userData } = found;
+      persistUser(userData);
+      return { success: true };
+    }
+    return { success: false, error: 'Invalid email or password. Please try again.' };
+  };
+
+  const register = (name, email, password) => {
+    const users = getRegisteredUsers();
+    // Check if email already exists
+    if (email === DEMO_CREDENTIALS.email || users.some(u => u.email === email)) {
+      return { success: false, error: 'An account with this email already exists.' };
+    }
+    // Create new user with profileComplete: false
+    const newUser = {
+      name,
+      email,
+      password, // stored in registered-users list for login
+      profileComplete: false,
+      createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    saveRegisteredUsers(users);
+    // Log them in (without password in session)
+    const { password: _, ...sessionUser } = newUser;
+    persistUser(sessionUser);
+    return { success: true };
   };
 
   const logout = () => {
@@ -42,14 +88,30 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('hc-user');
   };
 
-  const completeOnboarding = (data) => {
-    const updated = { ...user, ...data, profileComplete: true };
-    setUser(updated);
-    localStorage.setItem('hc-user', JSON.stringify(updated));
+  const completeOnboarding = (patientData) => {
+    const updated = { ...user, ...patientData, profileComplete: true };
+    persistUser(updated);
+    // Also update in registered users list
+    const users = getRegisteredUsers();
+    const idx = users.findIndex(u => u.email === user.email);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...patientData, profileComplete: true };
+      saveRegisteredUsers(users);
+    }
   };
 
+  const needsOnboarding = !!user && !user.profileComplete;
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, completeOnboarding, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      register,
+      logout,
+      completeOnboarding,
+      isAuthenticated: !!user,
+      needsOnboarding
+    }}>
       {children}
     </AuthContext.Provider>
   );

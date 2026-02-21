@@ -1,38 +1,37 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Activity, Mail, Lock, ArrowRight, Eye, EyeOff, Sun, Moon, Shield, TrendingDown, FileText } from 'lucide-react';
+import { Activity, User, Mail, Lock, ArrowRight, Eye, EyeOff, Sun, Moon, Shield, Heart, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import './Login.css';
+import './Register.css';
 
-const Login = () => {
+const Register = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { register } = useAuth();
   const { theme, toggle } = useTheme();
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (password !== confirmPw) { setError('Passwords do not match.'); return; }
     setLoading(true);
     await new Promise(r => setTimeout(r, 600));
-    const result = login(email, password);
+    const result = register(name, email, password);
     setLoading(false);
-    if (result.success) {
-      navigate('/profile');
-    } else {
-      setError(result.error);
-    }
+    if (result.success) { navigate('/questionnaire'); } else { setError(result.error); }
   };
 
   return (
     <div className="auth-page">
-      {/* Theme toggle */}
       <button className="auth-theme-toggle" onClick={toggle}
         aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
         {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
@@ -46,7 +45,6 @@ const Login = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Logo */}
             <Link to="/" className="auth-logo">
               <div className="auth-logo-mark">
                 <Activity size={24} strokeWidth={2.5} />
@@ -55,11 +53,11 @@ const Login = () => {
             </Link>
 
             <div className="auth-heading">
-              <h1>Welcome back</h1>
-              <p>Sign in to access your dashboard, analyze bills, and manage your healthcare.</p>
+              <h1>Create your account</h1>
+              <p>Join HealthClear and start making smarter healthcare decisions today.</p>
             </div>
 
-            <form onSubmit={handleLogin} className="auth-form" noValidate>
+            <form onSubmit={handleRegister} className="auth-form" noValidate>
               {error && (
                 <motion.div className="auth-error"
                   initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} role="alert">
@@ -68,27 +66,33 @@ const Login = () => {
               )}
 
               <div className="input-group">
-                <label className="input-label" htmlFor="login-email">Email Address</label>
+                <label className="input-label" htmlFor="reg-name">Full Name</label>
                 <div className="input-with-icon">
-                  <Mail className="field-icon" size={18} aria-hidden="true" />
-                  <input id="login-email" type="email" className="input-field"
-                    placeholder="patient@healthclear.com"
-                    value={email} onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email" required />
+                  <User className="field-icon" size={18} aria-hidden="true" />
+                  <input id="reg-name" type="text" className="input-field"
+                    placeholder="Alex Johnson" value={name}
+                    onChange={(e) => setName(e.target.value)} autoComplete="name" required />
                 </div>
               </div>
 
               <div className="input-group">
-                <div className="label-row">
-                  <label className="input-label" htmlFor="login-password">Password</label>
-                  <a href="#" className="forgot-link">Forgot?</a>
+                <label className="input-label" htmlFor="reg-email">Email Address</label>
+                <div className="input-with-icon">
+                  <Mail className="field-icon" size={18} aria-hidden="true" />
+                  <input id="reg-email" type="email" className="input-field"
+                    placeholder="you@example.com" value={email}
+                    onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
                 </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label" htmlFor="reg-password">Password</label>
                 <div className="input-with-icon">
                   <Lock className="field-icon" size={18} aria-hidden="true" />
-                  <input id="login-password" type={showPw ? 'text' : 'password'}
-                    className="input-field" placeholder="health123"
+                  <input id="reg-password" type={showPw ? 'text' : 'password'}
+                    className="input-field" placeholder="Min. 6 characters"
                     value={password} onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password" required />
+                    autoComplete="new-password" required />
                   <button type="button" className="pw-toggle"
                     onClick={() => setShowPw(!showPw)}
                     aria-label={showPw ? 'Hide password' : 'Show password'} tabIndex={-1}>
@@ -97,16 +101,26 @@ const Login = () => {
                 </div>
               </div>
 
+              <div className="input-group">
+                <label className="input-label" htmlFor="reg-confirm">Confirm Password</label>
+                <div className="input-with-icon">
+                  <Lock className="field-icon" size={18} aria-hidden="true" />
+                  <input id="reg-confirm" type={showPw ? 'text' : 'password'}
+                    className="input-field" placeholder="Re-enter password"
+                    value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)}
+                    autoComplete="new-password" required />
+                </div>
+              </div>
+
               <button type="submit" className="btn btn-primary w-full auth-submit" disabled={loading}>
                 {loading ? <span className="spinner" /> : (
-                  <><span>Sign In</span><ArrowRight size={18} /></>
+                  <><span>Create Account</span><ArrowRight size={18} /></>
                 )}
               </button>
             </form>
 
             <div className="auth-footer">
-              <p>Demo: <strong>patient@healthclear.com</strong> / <strong>health123</strong></p>
-              <p className="mt-2">Don't have an account? <Link to="/register" className="auth-link">Sign up</Link></p>
+              <p>Already have an account? <Link to="/login" className="auth-link">Sign in</Link></p>
             </div>
           </motion.div>
         </div>
@@ -118,22 +132,22 @@ const Login = () => {
         <img src="/images/auth-hero.png" alt="" className="auth-hero-img" aria-hidden="true" />
         <div className="auth-hero-content">
           <div className="auth-hero-badge">
-            <Shield size={14} /> Trusted by 2M+ patients
+            <Sparkles size={14} /> Your health, your data
           </div>
-          <h2>Take control of your<br />healthcare costs</h2>
+          <h2>Transparent pricing.<br />Better outcomes.</h2>
           <div className="auth-hero-stats">
             <div className="auth-hero-stat">
-              <TrendingDown size={18} />
+              <Shield size={18} />
               <div>
-                <strong>$4.2M</strong>
-                <span>Savings found</span>
+                <strong>HIPAA</strong>
+                <span>Compliant</span>
               </div>
             </div>
             <div className="auth-hero-stat">
-              <FileText size={18} />
+              <Heart size={18} />
               <div>
-                <strong>50K+</strong>
-                <span>Bills analyzed</span>
+                <strong>4.9★</strong>
+                <span>User rating</span>
               </div>
             </div>
           </div>
@@ -143,4 +157,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

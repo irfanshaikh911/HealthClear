@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Questionnaire from './pages/Questionnaire';
 import Profile from './pages/Profile';
 import BillAnalysis from './pages/BillAnalysis';
@@ -18,6 +19,14 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Questionnaire: must be logged in AND not yet completed profile
+const OnboardingRoute = ({ children }) => {
+  const { isAuthenticated, needsOnboarding } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/register" replace />;
+  if (!needsOnboarding) return <Navigate to="/profile" replace />;
+  return children;
+};
+
 function AppRoutes() {
   return (
     <Layout>
@@ -25,7 +34,8 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/questionnaire" element={<ProtectedRoute><Questionnaire /></ProtectedRoute>} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/questionnaire" element={<OnboardingRoute><Questionnaire /></OnboardingRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/bill-analysis" element={<ProtectedRoute><BillAnalysis /></ProtectedRoute>} />
           <Route path="/find-treatment" element={<FindTreatment />} />

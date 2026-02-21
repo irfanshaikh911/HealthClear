@@ -141,7 +141,7 @@ const Landing = () => {
             ))}
           </div>
           <div className="qr-cta">
-            <Link to="/find-treatment" className="btn btn-primary">
+            <Link to={isAuthenticated ? "/find-treatment" : "/register"} className="btn btn-primary">
               View All Results <ArrowRight size={16} />
             </Link>
           </div>

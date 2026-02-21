@@ -6,7 +6,7 @@ import './Profile.css';
 
 const Profile = () => {
   const { user } = useAuth();
-  const name = user?.name || 'Alex';
+  const name = user?.full_name || user?.name || 'User';
 
   return (
     <motion.div
@@ -121,10 +121,14 @@ const Profile = () => {
         <div className="glass-card dash-section summary-section animate-in delay-4">
           <h2>Health Profile</h2>
           <div className="profile-tags">
-            <span className="tag">Blood Type: {user?.bloodType || 'O+'}</span>
-            <span className="tag">Allergy: {user?.allergies?.[0] || 'Penicillin'}</span>
-            <span className="tag">Condition: {user?.conditions?.[0] || 'Mild Asthma'}</span>
-            <span className="tag">Gender: {user?.gender || 'Male'}</span>
+            {(user?.blood_type || user?.bloodType) && <span className="tag">Blood Type: {user?.blood_type || user?.bloodType}</span>}
+            {user?.gender && <span className="tag">Gender: {user?.gender}</span>}
+            {user?.allergies && <span className="tag">Allergies: {typeof user.allergies === 'string' ? user.allergies : user.allergies[0]}</span>}
+            {user?.medical_history && <span className="tag">History: {user.medical_history}</span>}
+            {(user?.conditions && Array.isArray(user.conditions)) && <span className="tag">Condition: {user.conditions[0]}</span>}
+            {user?.height_cm && <span className="tag">Height: {user.height_cm} cm</span>}
+            {user?.weight_kg && <span className="tag">Weight: {user.weight_kg} kg</span>}
+            {user?.organ_donor && <span className="tag">Organ Donor: Yes</span>}
           </div>
           <button className="btn btn-secondary w-full mt-4">Update Medical History</button>
         </div>

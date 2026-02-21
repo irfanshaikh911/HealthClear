@@ -9,8 +9,8 @@ const Navbar = () => {
   const { theme, toggle } = useTheme();
   const { isAuthenticated, logout } = useAuth();
 
-  // Hide on login & questionnaire
-  if (['/login', '/questionnaire'].includes(location.pathname)) return null;
+  // Hide on login, register & questionnaire
+  if (['/login', '/register', '/questionnaire'].includes(location.pathname)) return null;
 
   const isLanding = location.pathname === '/';
 
@@ -80,7 +80,7 @@ const Navbar = () => {
           ) : (
             <>
               <Link to="/login" className="nav-link login-link">Login</Link>
-              <Link to="/login" className="btn btn-primary nav-auth-btn">Sign Up</Link>
+              <Link to="/register" className="btn btn-primary nav-auth-btn">Sign Up</Link>
             </>
           )}
         </div>
