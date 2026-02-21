@@ -1,0 +1,48 @@
+# ---- Node.js / React ----
+node_modules/
+build/
+dist/
+.env*
+.next/
+.cache/
+coverage/
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+*.log
+*.tgz
+*.tsbuildinfo
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.env/
+.venv/
+venv/
+env/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.pylint.d/
+pip-log.txt
+
+# ---- General ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.history/
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+*.rej
+*.sublime-workspace
+*.sublime-project
+
+# ---- Included ----
+!.env.example
