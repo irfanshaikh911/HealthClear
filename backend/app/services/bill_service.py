@@ -1,29 +1,38 @@
 """Bill processing orchestrator.
 
-Pipeline:  OCR extract text → Groq parse → verify → store (Supabase).
+Pipeline:
+  - Images → Groq vision model (no OCR needed)
+  - PDFs with text → PyPDF2 extract → Groq text model
+  - PDFs without text → Groq vision model (scanned PDFs)
+  Then: verify → store (Supabase).
 """
 
+import os
 from datetime import datetime, timezone
 
 from supabase import Client
 
 from app.models.enums import BillStatus
 from app.services.ocr_service import extract_text
-from app.services.groq_service import extract_bill_data
+from app.services.groq_service import extract_bill_data, extract_bill_data_from_image
 from app.services.verification_engine import verify_line_items, generate_report_summary
+
+
+def _is_image(file_path: str) -> bool:
+    ext = os.path.splitext(file_path)[1].lower()
+    return ext in (".png", ".jpg", ".jpeg", ".bmp", ".tiff")
 
 
 async def process_bill(bill_id: int, sb: Client) -> None:
     """Full bill processing pipeline — runs as a background task.
 
     1. Mark bill as PROCESSING
-    2. OCR extract text from uploaded file
-    3. Send text to Groq LLM for structured extraction
-    4. Update bill record with extracted fields
-    5. Verify each line item against standard prices
-    6. Insert line items into DB
-    7. Generate verification report
-    8. Mark bill as COMPLETED
+    2. Extract data: vision model for images, text model for PDFs
+    3. Update bill record with extracted fields
+    4. Verify each line item against standard prices
+    5. Insert line items into DB
+    6. Generate verification report
+    7. Mark bill as COMPLETED
     """
     result = sb.table("bills").select("*").eq("id", bill_id).single().execute()
     bill = result.data
@@ -34,21 +43,29 @@ async def process_bill(bill_id: int, sb: Client) -> None:
         # ── 1. Mark as processing ─────────────────────────────
         sb.table("bills").update({"status": BillStatus.PROCESSING}).eq("id", bill_id).execute()
 
-        # ── 2. OCR — extract text from uploaded file ──────────
-        bill_text = extract_text(bill["file_path"])
-        if not bill_text:
-            sb.table("bills").update({"status": BillStatus.FAILED}).eq("id", bill_id).execute()
-            return
+        file_path = bill["file_path"]
 
-        # ── 3. Groq — parse text into structured data ─────────
-        extraction = await extract_bill_data(bill_text)
+        # ── 2. Extract data ───────────────────────────────────
+        if _is_image(file_path):
+            # Images → send directly to Groq vision model
+            extraction = await extract_bill_data_from_image(file_path)
+        else:
+            # PDFs → try text extraction first
+            bill_text = extract_text(file_path)
+            if bill_text:
+                extraction = await extract_bill_data(bill_text)
+            else:
+                # Scanned PDF with no selectable text → vision model
+                extraction = await extract_bill_data_from_image(file_path)
+
         if not extraction["success"]:
+            print(f"Extraction failed: {extraction.get('error')}")
             sb.table("bills").update({"status": BillStatus.FAILED}).eq("id", bill_id).execute()
             return
 
         data = extraction["data"]
 
-        # ── 4. Update bill with extracted info ────────────────
+        # ── 3. Update bill with extracted info ────────────────
         sb.table("bills").update({
             "raw_extracted_json": data,
             "hospital_name": data.get("hospital_name"),
@@ -65,7 +82,7 @@ async def process_bill(bill_id: int, sb: Client) -> None:
             "net_payable": data.get("net_payable"),
         }).eq("id", bill_id).execute()
 
-        # ── 5. Look up hospital ───────────────────────────────
+        # ── 4. Look up hospital ───────────────────────────────
         hospital_id = None
         if data.get("hospital_name"):
             h_result = (
@@ -78,11 +95,11 @@ async def process_bill(bill_id: int, sb: Client) -> None:
             if h_result.data:
                 hospital_id = h_result.data[0]["id"]
 
-        # ── 6. Verify line items ──────────────────────────────
+        # ── 5. Verify line items ──────────────────────────────
         raw_items = data.get("line_items", [])
         findings = verify_line_items(sb, raw_items, hospital_id)
 
-        # ── 7. Insert line items ──────────────────────────────
+        # ── 6. Insert line items ──────────────────────────────
         line_items_to_insert = []
         for raw, finding in zip(raw_items, findings):
             line_items_to_insert.append({
@@ -103,7 +120,7 @@ async def process_bill(bill_id: int, sb: Client) -> None:
         if line_items_to_insert:
             sb.table("bill_line_items").insert(line_items_to_insert).execute()
 
-        # ── 8. Generate verification report ───────────────────
+        # ── 7. Generate verification report ───────────────────
         total_billed = data.get("net_payable") or data.get("subtotal") or 0
         summary = generate_report_summary(findings, total_billed)
 
@@ -126,12 +143,13 @@ async def process_bill(bill_id: int, sb: Client) -> None:
             "recommendations": summary["recommendations"],
         }).execute()
 
-        # ── 9. Mark as completed ──────────────────────────────
+        # ── 8. Mark as completed ──────────────────────────────
         sb.table("bills").update({
             "status": BillStatus.COMPLETED,
             "processed_at": datetime.now(timezone.utc).isoformat(),
         }).eq("id", bill_id).execute()
 
     except Exception as exc:
+        print(f"Bill processing error: {exc}")
         sb.table("bills").update({"status": BillStatus.FAILED}).eq("id", bill_id).execute()
         raise exc

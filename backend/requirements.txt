@@ -8,7 +8,5 @@ aiofiles
 httpx
 supabase
 groq
-pdfplumber
-pytesseract
 PyPDF2
 Pillow

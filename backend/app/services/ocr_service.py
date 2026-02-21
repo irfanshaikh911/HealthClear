@@ -1,38 +1,28 @@
-"""OCR text extraction from PDFs and images.
+"""Text extraction from PDFs using PyPDF2 (no Tesseract required).
 
-Supports:
-  - PDF with selectable text (PyPDF2)
-  - PDF with scanned pages (pdfplumber → pytesseract OCR fallback)
-  - Images: PNG, JPG, JPEG, BMP, TIFF (pytesseract)
+For images, returns empty string — the bill_service will route
+those to Groq's vision model instead.
 """
 
 import os
-
-import pdfplumber
-import pytesseract
-from PIL import Image
 import PyPDF2
-
-from app.core.config import settings
-
-# Configure Tesseract path
-pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
 
 
 def extract_text(file_path: str) -> str:
-    """Extract text from a PDF or image file.
+    """Extract selectable text from a PDF file.
 
-    For PDFs: tries PyPDF2 first (selectable text), falls back to OCR.
-    For images: uses pytesseract directly.
-
-    Returns the extracted text as a string.
+    For images (png/jpg/etc), returns empty string so the caller
+    can fall back to the Groq vision model.
     """
-    text = ""
     ext = os.path.splitext(file_path)[1].lower()
 
-    # ── PDF ────────────────────────────────────────────────────
+    # Images → no text extraction, will use vision model
+    if ext in (".png", ".jpg", ".jpeg", ".bmp", ".tiff"):
+        return ""
+
+    # PDF → try PyPDF2 for selectable text
     if ext == ".pdf":
-        # Try PyPDF2 (selectable text)
+        text = ""
         try:
             with open(file_path, "rb") as f:
                 reader = PyPDF2.PdfReader(f)
@@ -42,28 +32,6 @@ def extract_text(file_path: str) -> str:
                         text += page_text + "\n"
         except Exception as exc:
             print(f"PyPDF2 extraction failed: {exc}")
+        return text.strip()
 
-        # OCR fallback if no selectable text found
-        if not text.strip():
-            print("No selectable text found → Using OCR...")
-            try:
-                with pdfplumber.open(file_path) as pdf:
-                    for page in pdf.pages:
-                        pil_img = page.to_image(resolution=300).original
-                        ocr_text = pytesseract.image_to_string(pil_img)
-                        text += ocr_text + "\n"
-            except Exception as exc:
-                print(f"OCR extraction failed: {exc}")
-
-    # ── Image ─────────────────────────────────────────────────
-    elif ext in (".png", ".jpg", ".jpeg", ".bmp", ".tiff"):
-        try:
-            img = Image.open(file_path)
-            text = pytesseract.image_to_string(img)
-        except Exception as exc:
-            print(f"Image OCR failed: {exc}")
-
-    else:
-        raise ValueError(f"Unsupported file format: {ext}")
-
-    return text.strip()
+    raise ValueError(f"Unsupported file format: {ext}")

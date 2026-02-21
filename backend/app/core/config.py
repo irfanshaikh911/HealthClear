@@ -21,9 +21,6 @@ class Settings(BaseSettings):
     # ── Groq ──────────────────────────────────────────────────
     GROQ_API_KEY: str
 
-    # ── Tesseract OCR path (Windows) ──────────────────────────
-    TESSERACT_CMD: str = r"D:\Tesseract-OCR\tesseract.exe"
-
     # ── File uploads ──────────────────────────────────────────
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE_MB: int = 10
