@@ -1,27 +1,33 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  User, MessageSquare, Search, FileText, Activity, Heart,
-  Droplets, Ruler, Weight, Shield, ChevronRight, ArrowRight,
-  Sparkles, Clock, Pill, AlertTriangle, Send
+  MessageSquare, Search, MapPin, FileText, ArrowRight,
+  Sparkles, Send, Star, Shield, Clock, DollarSign, User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Profile.css';
+
+const PROVIDERS = [
+  { id: 1, name: "Apex Medical Center", type: "Hospital", distance: "2.4 mi", rating: 4.8, reviews: 342, costRange: "$800 – $1,200", tags: ["High Trust Score", "In-Network"], waitTime: "~15 min", address: "123 Main St, Seattle, WA 98101" },
+  { id: 2, name: "Valley Diagnostics & Imaging", type: "Specialty Clinic", distance: "5.1 mi", rating: 4.5, reviews: 128, costRange: "$400 – $700", tags: ["Fast Availability", "Lowest Cost"], waitTime: "~5 min", address: "456 Oak Ave, Bellevue, WA 98004" },
+  { id: 3, name: "Greenfield Family Clinic", type: "Primary Care", distance: "1.2 mi", rating: 4.9, reviews: 67, costRange: "$150 – $350", tags: ["Walk-ins Welcome", "Telehealth"], waitTime: "~10 min", address: "21 Elm St, Seattle, WA 98103" },
+  { id: 4, name: "Pacific Wellness Center", type: "Specialty", distance: "3.5 mi", rating: 4.6, reviews: 215, costRange: "$500 – $900", tags: ["Telehealth", "Top Rated"], waitTime: "~8 min", address: "55 Pine Ave, Seattle, WA 98105" },
+  { id: 5, name: "Sound Health Clinic", type: "Primary Care", distance: "2.8 mi", rating: 4.8, reviews: 186, costRange: "$200 – $400", tags: ["Walk-ins", "Pediatrics"], waitTime: "~15 min", address: "77 Market St, Seattle, WA 98101" },
+  { id: 6, name: "City Health General", type: "Hospital", distance: "7.8 mi", rating: 4.1, reviews: 890, costRange: "$1,100 – $2,500", tags: ["24/7 ER", "Level 1 Trauma"], waitTime: "~30 min", address: "789 Cedar Blvd, Tacoma, WA 98402" },
+];
 
 const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const name = user?.full_name || user?.name || 'User';
-  const [assistantInput, setAssistantInput] = useState('');
 
+  // Assistant
+  const [assistantInput, setAssistantInput] = useState('');
   const handleAssistantSubmit = (e) => {
     e.preventDefault();
-    if (assistantInput.trim()) {
-      navigate('/assistant', { state: { initialMessage: assistantInput } });
-    }
+    if (assistantInput.trim()) navigate('/assistant', { state: { initialMessage: assistantInput } });
   };
-
   const quickPrompts = [
     'What treatments are available for chronic back pain?',
     'Compare MRI costs near me',
@@ -29,19 +35,18 @@ const Profile = () => {
     'Find affordable physical therapy',
   ];
 
-  // Compute BMI if height and weight exist
-  const heightCm = parseFloat(user?.height_cm);
-  const weightKg = parseFloat(user?.weight_kg);
-  const bmi = heightCm && weightKg ? (weightKg / ((heightCm / 100) ** 2)).toFixed(1) : null;
-  const bmiCategory = bmi
-    ? bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese'
-    : null;
+  // Find Treatment
+  const [treatment, setTreatment] = useState('');
+  const [location, setLocation] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const bloodType = user?.blood_type || user?.bloodType;
-  const gender = user?.gender;
-  const allergies = user?.allergies;
-  const medications = user?.medications;
-  const medicalHistory = user?.medical_history || (user?.conditions ? user.conditions.join(', ') : null);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!treatment || !location) return;
+    setIsSearching(true);
+    setTimeout(() => { setIsSearching(false); setHasSearched(true); }, 800);
+  };
 
   return (
     <motion.div
@@ -61,14 +66,9 @@ const Profile = () => {
             <p className="dash-subtitle">Here's your health overview</p>
           </div>
         </div>
-        <div className="dash-header-actions">
-          <Link to="/find-treatment" className="btn btn-secondary btn-sm">
-            <Search size={16} /> Find Treatment
-          </Link>
-        </div>
       </div>
 
-      {/* ============ ASSISTANT HERO ============ */}
+      {/* ============ AI ASSISTANT HERO ============ */}
       <div className="assistant-hero glass-card animate-in delay-2">
         <div className="assistant-hero-glow" aria-hidden="true" />
         <div className="assistant-hero-top">
@@ -84,13 +84,9 @@ const Profile = () => {
         <form className="assistant-input-row" onSubmit={handleAssistantSubmit}>
           <div className="assistant-input-wrap">
             <MessageSquare size={18} className="assistant-input-icon" />
-            <input
-              type="text"
-              className="assistant-input"
+            <input type="text" className="assistant-input"
               placeholder="Ask about treatments, costs, medications..."
-              value={assistantInput}
-              onChange={(e) => setAssistantInput(e.target.value)}
-            />
+              value={assistantInput} onChange={(e) => setAssistantInput(e.target.value)} />
             <button type="submit" className="assistant-send-btn" aria-label="Send">
               <Send size={18} />
             </button>
@@ -98,181 +94,112 @@ const Profile = () => {
         </form>
         <div className="assistant-prompts">
           {quickPrompts.map((prompt) => (
-            <button
-              key={prompt}
-              className="prompt-chip"
-              onClick={() => navigate('/assistant', { state: { initialMessage: prompt } })}
-            >
+            <button key={prompt} className="prompt-chip"
+              onClick={() => navigate('/assistant', { state: { initialMessage: prompt } })}>
               {prompt}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ============ VITALS BENTO ============ */}
-      <div className="vitals-grid animate-in delay-3">
-        <div className="vital-card glass-card">
-          <div className="vital-icon-wrap primary"><Heart size={20} /></div>
-          <div className="vital-info">
-            <span className="vital-label">Blood Type</span>
-            <span className="vital-value">{bloodType || '—'}</span>
-          </div>
+      {/* ============ FIND TREATMENT ============ */}
+      <div className="treatment-section animate-in delay-3">
+        <div className="treatment-header">
+          <h2><Search size={20} /> Find Treatment</h2>
+          <p>Compare providers, costs, and reviews near you</p>
         </div>
 
-        <div className="vital-card glass-card">
-          <div className="vital-icon-wrap accent"><Droplets size={20} /></div>
-          <div className="vital-info">
-            <span className="vital-label">Gender</span>
-            <span className="vital-value">{gender || '—'}</span>
+        <form onSubmit={handleSearch} className={`search-bar glass-panel ${hasSearched ? 'compact-bar' : ''}`}>
+          <div className="search-input-group">
+            <Search className="si-icon" size={20} aria-hidden="true" />
+            <input type="text" placeholder="Condition, procedure, or doctor..."
+              className="si-input" value={treatment}
+              onChange={(e) => setTreatment(e.target.value)} aria-label="Search treatment" />
           </div>
-        </div>
+          <div className="search-divider" />
+          <div className="search-input-group">
+            <MapPin className="si-icon" size={20} aria-hidden="true" />
+            <input type="text" placeholder="City, ZIP, or 'Near Me'"
+              className="si-input" value={location}
+              onChange={(e) => setLocation(e.target.value)} aria-label="Search location" />
+          </div>
+          <button type="submit" className="btn btn-primary search-submit" disabled={isSearching}>
+            {isSearching ? <span className="spinner" /> : 'Search'}
+          </button>
+        </form>
 
-        <div className="vital-card glass-card">
-          <div className="vital-icon-wrap success"><Ruler size={20} /></div>
-          <div className="vital-info">
-            <span className="vital-label">Height</span>
-            <span className="vital-value">{user?.height_cm ? `${user.height_cm} cm` : '—'}</span>
-          </div>
-        </div>
-
-        <div className="vital-card glass-card">
-          <div className="vital-icon-wrap warning"><Weight size={20} /></div>
-          <div className="vital-info">
-            <span className="vital-label">Weight</span>
-            <span className="vital-value">{user?.weight_kg ? `${user.weight_kg} kg` : '—'}</span>
-          </div>
-        </div>
-
-        {bmi && (
-          <div className="vital-card glass-card vital-wide">
-            <div className="vital-icon-wrap cta"><Activity size={20} /></div>
-            <div className="vital-info">
-              <span className="vital-label">BMI</span>
-              <span className="vital-value">{bmi} <small className="bmi-cat">{bmiCategory}</small></span>
-            </div>
-            <div className="bmi-bar">
-              <div className="bmi-fill" style={{ width: `${Math.min((bmi / 40) * 100, 100)}%` }} />
-            </div>
-          </div>
-        )}
-
-        {user?.organ_donor && (
-          <div className="vital-card glass-card">
-            <div className="vital-icon-wrap primary"><Shield size={20} /></div>
-            <div className="vital-info">
-              <span className="vital-label">Organ Donor</span>
-              <span className="vital-value">✓ Registered</span>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {hasSearched && !isSearching && (
+            <motion.div className="results-section"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}>
+              <div className="results-meta">
+                <p>
+                  Showing <strong>{PROVIDERS.length}</strong> results
+                  for <strong>"{treatment}"</strong> near <strong>{location}</strong>
+                </p>
+              </div>
+              <div className="provider-list">
+                {PROVIDERS.map((p, i) => (
+                  <motion.div key={p.id} className="provider-card glass-card"
+                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}>
+                    <div className="provider-main">
+                      <div className="provider-top-row">
+                        <span className="provider-type">{p.type}</span>
+                        <div className="provider-rating">
+                          <Star size={15} fill="var(--color-cta)" color="var(--color-cta)" />
+                          <strong>{p.rating}</strong>
+                          <span className="rating-count">({p.reviews})</span>
+                        </div>
+                      </div>
+                      <h3 className="provider-name">{p.name}</h3>
+                      <p className="provider-address"><MapPin size={14} /> {p.address}</p>
+                      <div className="provider-tags">
+                        {p.tags.map((tag, j) => (
+                          <span key={j} className="ptag"><Shield size={12} /> {tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="provider-side">
+                      <div className="cost-block">
+                        <span className="cost-label"><DollarSign size={14} /> Est. Cost</span>
+                        <strong className="cost-value">{p.costRange}</strong>
+                      </div>
+                      <div className="wait-block">
+                        <span className="cost-label"><Clock size={14} /> Wait Time</span>
+                        <strong className="cost-value small">{p.waitTime}</strong>
+                      </div>
+                      <button className="btn btn-primary provider-cta">
+                        View Details <ArrowRight size={16} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* ============ LOWER GRID ============ */}
-      <div className="dash-lower-grid">
-        {/* Medical Profile */}
-        <div className="glass-card dash-section animate-in delay-4">
-          <div className="section-top">
-            <h2><Pill size={18} /> Medical Profile</h2>
+      {/* ============ BOTTOM ACTIONS ============ */}
+      <div className="dash-bottom-row animate-in delay-4">
+        <Link to="/bill-analysis" className="bottom-action glass-card">
+          <div className="bottom-action-icon"><FileText size={22} /></div>
+          <div>
+            <h4>Analyze a Bill</h4>
+            <p>Upload and verify medical invoices</p>
           </div>
-
-          {allergies && (
-            <div className="med-row">
-              <div className="med-row-icon warning"><AlertTriangle size={16} /></div>
-              <div className="med-row-body">
-                <span className="med-row-label">Allergies</span>
-                <p className="med-row-value">{allergies}</p>
-              </div>
-            </div>
-          )}
-
-          {medications && (
-            <div className="med-row">
-              <div className="med-row-icon accent"><Pill size={16} /></div>
-              <div className="med-row-body">
-                <span className="med-row-label">Medications</span>
-                <p className="med-row-value">{medications}</p>
-              </div>
-            </div>
-          )}
-
-          {medicalHistory && (
-            <div className="med-row">
-              <div className="med-row-icon primary"><FileText size={16} /></div>
-              <div className="med-row-body">
-                <span className="med-row-label">Medical History</span>
-                <p className="med-row-value">{medicalHistory}</p>
-              </div>
-            </div>
-          )}
-
-          {!allergies && !medications && !medicalHistory && (
-            <p className="med-empty">No medical history recorded yet.</p>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="glass-card dash-section animate-in delay-4">
-          <h2>Quick Actions</h2>
-          <div className="action-list">
-            <Link to="/assistant" className="action-row">
-              <div className="action-icon-box primary"><MessageSquare size={20} /></div>
-              <div className="action-text">
-                <h4>Health Assistant</h4>
-                <p>Ask about treatments, costs & medications</p>
-              </div>
-              <ChevronRight size={18} className="action-chev" />
-            </Link>
-            <Link to="/find-treatment" className="action-row">
-              <div className="action-icon-box accent"><Search size={20} /></div>
-              <div className="action-text">
-                <h4>Find Treatment</h4>
-                <p>Compare providers and costs near you</p>
-              </div>
-              <ChevronRight size={18} className="action-chev" />
-            </Link>
-            <Link to="/bill-analysis" className="action-row">
-              <div className="action-icon-box muted"><FileText size={20} /></div>
-              <div className="action-text">
-                <h4>Analyze a Bill</h4>
-                <p>Upload and verify medical invoices</p>
-              </div>
-              <ChevronRight size={18} className="action-chev" />
-            </Link>
+          <ArrowRight size={18} className="bottom-arrow" />
+        </Link>
+        <Link to="/assistant" className="bottom-action glass-card">
+          <div className="bottom-action-icon accent"><MessageSquare size={22} /></div>
+          <div>
+            <h4>Chat History</h4>
+            <p>View past assistant conversations</p>
           </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="glass-card dash-section animate-in delay-5">
-          <div className="section-top">
-            <h2><Clock size={18} /> Recent Activity</h2>
-          </div>
-          <div className="activity-feed">
-            <div className="activity-item">
-              <div className="activity-dot primary" />
-              <div className="activity-body">
-                <h4>Asked about knee surgery options</h4>
-                <p>Received 3 treatment plans with cost estimates</p>
-              </div>
-              <span className="activity-time"><Clock size={12} /> 1d ago</span>
-            </div>
-            <div className="activity-item">
-              <div className="activity-dot accent" />
-              <div className="activity-body">
-                <h4>Found physical therapy providers</h4>
-                <p>Compared 5 options near your area</p>
-              </div>
-              <span className="activity-time"><Clock size={12} /> 3d ago</span>
-            </div>
-            <div className="activity-item">
-              <div className="activity-dot cta" />
-              <div className="activity-body">
-                <h4>Medication interaction check</h4>
-                <p>All clear — no conflicts detected</p>
-              </div>
-              <span className="activity-time"><Clock size={12} /> 1w ago</span>
-            </div>
-          </div>
-        </div>
+          <ArrowRight size={18} className="bottom-arrow" />
+        </Link>
       </div>
     </motion.div>
   );

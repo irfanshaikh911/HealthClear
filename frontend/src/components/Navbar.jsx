@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, FileText, Search, MessageSquare, User, Sun, Moon, LogOut } from 'lucide-react';
+import { Activity, FileText, MessageSquare, User, Sun, Moon, LogOut, LayoutDashboard } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
@@ -14,12 +14,12 @@ const Navbar = () => {
 
   const isLanding = location.pathname === '/';
 
-  // Authenticated nav links
+  // Authenticated nav links — Dashboard and Assistant are primary, Bill Analysis secondary, Profile for settings
   const navLinks = [
-    { path: '/profile', icon: User, label: 'Dashboard' },
+    { path: '/profile', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/bill-analysis', icon: FileText, label: 'Bill Analysis' },
-    { path: '/find-treatment', icon: Search, label: 'Find Treatment' },
     { path: '/assistant', icon: MessageSquare, label: 'Assistant' },
+    { path: '/settings', icon: User, label: 'Profile' },
   ];
 
   return (

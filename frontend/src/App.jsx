@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import BillAnalysis from './pages/BillAnalysis';
 import FindTreatment from './pages/FindTreatment';
 import ChatAssistant from './pages/ChatAssistant';
+import Settings from './pages/Settings';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -40,6 +41,7 @@ function AppRoutes() {
           <Route path="/bill-analysis" element={<ProtectedRoute><BillAnalysis /></ProtectedRoute>} />
           <Route path="/find-treatment" element={<FindTreatment />} />
           <Route path="/assistant" element={<ProtectedRoute><ChatAssistant /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
       </AnimatePresence>
     </Layout>
