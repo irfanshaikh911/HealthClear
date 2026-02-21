@@ -8,35 +8,35 @@ HOSPITALS = [
         "base_cost": 50000.0, "success_rate": 0.92,
         "base_complication_rate": 0.05, "average_recovery_days": 5,
         "room_cost_per_day": 3500.0,
-        "accepts_insurance": True, "insurance_coverage_pct": 0.75,
+        "accepts_insurance": True, "insurance_coverage_available": "both",
     },
     {
         "name": "Sahyadri Super Speciality Hospital", "city": "Pune",
         "base_cost": 45000.0, "success_rate": 0.89,
         "base_complication_rate": 0.06, "average_recovery_days": 6,
         "room_cost_per_day": 3000.0,
-        "accepts_insurance": True, "insurance_coverage_pct": 0.70,
+        "accepts_insurance": True, "insurance_coverage_available": "both",
     },
     {
         "name": "Jehangir Hospital", "city": "Pune",
         "base_cost": 55000.0, "success_rate": 0.94,
         "base_complication_rate": 0.04, "average_recovery_days": 4,
         "room_cost_per_day": 4000.0,
-        "accepts_insurance": True, "insurance_coverage_pct": 0.80,
+        "accepts_insurance": True, "insurance_coverage_available": "private",
     },
     {
         "name": "KEM Hospital", "city": "Pune",
         "base_cost": 30000.0, "success_rate": 0.85,
         "base_complication_rate": 0.08, "average_recovery_days": 7,
         "room_cost_per_day": 2000.0,
-        "accepts_insurance": True, "insurance_coverage_pct": 1.00,
+        "accepts_insurance": True, "insurance_coverage_available": "government",
     },
     {
         "name": "Deenanath Mangeshkar Hospital", "city": "Pune",
         "base_cost": 48000.0, "success_rate": 0.91,
         "base_complication_rate": 0.055, "average_recovery_days": 5,
         "room_cost_per_day": 3200.0,
-        "accepts_insurance": True, "insurance_coverage_pct": 0.72,
+        "accepts_insurance": True, "insurance_coverage_available": "both",
     },
 ]
 
@@ -80,8 +80,8 @@ def seed(client: Client) -> None:
             row_id = existing[h["name"]]["id"]
             try:
                 client.table("hospitals").update({
-                    "accepts_insurance":      h["accepts_insurance"],
-                    "insurance_coverage_pct": h["insurance_coverage_pct"],
+                    "accepts_insurance":             h["accepts_insurance"],
+                    "insurance_coverage_available":  h["insurance_coverage_available"],
                 }).eq("id", row_id).execute()
             except Exception:
                 pass

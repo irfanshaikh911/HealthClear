@@ -1,0 +1,18 @@
+﻿OK - all imports passed
+  /openapi.json  {'GET', 'HEAD'}
+  /docs  {'GET', 'HEAD'}
+  /docs/oauth2-redirect  {'GET', 'HEAD'}
+  /redoc  {'GET', 'HEAD'}
+  /api/bills/upload  {'POST'}
+  /api/bills/status/{bill_uuid}  {'GET'}
+  /api/bills/report/{bill_uuid}  {'GET'}
+  /api/bills/history  {'GET'}
+  /api/assistant/chat  {'POST'}
+  /api/assistant/rag-chat  {'POST'}
+  /api/assistant/history/patient/{patient_id}  {'GET'}
+  /api/assistant/history/{session_id}  {'GET'}
+  /api/auth/register  {'POST'}
+  /api/auth/login  {'POST'}
+  /api/auth/me/{user_id}  {'GET'}
+  /api/auth/onboarding/{user_id}  {'POST'}
+  /  {'GET'}

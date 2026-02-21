@@ -36,13 +36,13 @@ def calculate_insurance_breakdown(
     """
     Compute how much insurance covers at THIS hospital.
 
-    Rules:
-    - "none"       → no coverage
-    - "government" → 100% up to Ayushman Bharat cap (₹5L), if hospital accepts
-    - "private"    → hospital.insurance_coverage_pct of cost, if hospital accepts
+    hospital.insurance_coverage_available is text: "none", "private", "government", "both"
+    insurance_status is what the patient has: "none", "private", "government"
     """
     ins = insurance_status.lower().strip()
+    coverage = hospital.insurance_coverage_available.lower().strip()
 
+    # Patient has no insurance
     if ins == "none":
         return {
             "insurance_accepted": False,
@@ -50,20 +50,27 @@ def calculate_insurance_breakdown(
             "patient_out_of_pocket": round(personalized_cost, 2),
         }
 
-    if not hospital.accepts_insurance:
+    # Check if hospital accepts this type
+    hospital_accepts = (
+        coverage == "both"
+        or coverage == ins
+        or (not hospital.accepts_insurance and False)
+    )
+
+    if not hospital_accepts or coverage == "none":
         return {
             "insurance_accepted": False,
             "amount_covered": 0.0,
             "patient_out_of_pocket": round(personalized_cost, 2),
         }
 
-    # Hospital accepts insurance
+    # Hospital accepts — calculate coverage
     if ins == "government":
-        raw_coverage = personalized_cost * hospital.insurance_coverage_pct
-        capped = min(raw_coverage, AYUSHMAN_BHARAT_CAP)
-        amount_covered = round(capped, 2)
+        # Government covers 100% up to Ayushman Bharat cap
+        amount_covered = round(min(personalized_cost, AYUSHMAN_BHARAT_CAP), 2)
     else:
-        amount_covered = round(personalized_cost * hospital.insurance_coverage_pct, 2)
+        # Private insurance covers ~70%
+        amount_covered = round(personalized_cost * 0.70, 2)
 
     out_of_pocket = round(max(personalized_cost - amount_covered, 0.0), 2)
 
@@ -72,3 +79,4 @@ def calculate_insurance_breakdown(
         "amount_covered": amount_covered,
         "patient_out_of_pocket": out_of_pocket,
     }
+

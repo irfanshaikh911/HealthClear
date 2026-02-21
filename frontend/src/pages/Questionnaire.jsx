@@ -32,12 +32,12 @@ const Questionnaire = () => {
 
   const update = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      completeOnboarding(formData);
+      await completeOnboarding(formData);
       navigate('/profile');
     }
   };

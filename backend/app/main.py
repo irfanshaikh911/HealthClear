@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.bills import router as bills_router
 from app.api.assistant import router as assistant_router
+from app.api.auth import router as auth_router
 from app.db.supabase import get_supabase
 from app.services.seed_service import seed
 
@@ -47,6 +48,7 @@ app.add_middleware(
 
 app.include_router(bills_router)
 app.include_router(assistant_router)
+app.include_router(auth_router)
 
 
 @app.get("/", tags=["Health"])
