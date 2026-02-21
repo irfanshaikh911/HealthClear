@@ -1,54 +1,177 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Activity, User, Sparkles, Paperclip } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Send, Activity, User, Sparkles, Building, HandCoins, ShieldCheck, ActivitySquare, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { sendRagMessage } from '../services/api';
 import './ChatAssistant.css';
 
-const ACTION_CHIPS = [
-  "Explain my latest medical bill",
-  "I have a persistent headache",
-  "Find urgent care near me",
-  "What's the fair price for an MRI?",
-  "Compare treatment options for knee pain"
+const DEFAULT_CHIPS = [
+  "I need a knee replacement",
+  "How much does angioplasty cost?",
+  "Find hospitals for cataract surgery",
+  "I have a kidney stone",
 ];
 
-const INITIAL_MESSAGES = [
-  {
-    id: 1,
-    sender: 'assistant',
-    text: "Hello! I'm your HealthClear Assistant. I can help you understand bills, find treatments, or answer health-related questions. What would you like help with?"
-  }
-];
+const ResultCard = ({ result }) => {
+  const summary = result.personalized_summary;
+  const hospitals = result.hospital_comparison;
+  
+  const formatINR = (amt) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
 
-const SIMULATED_RESPONSES = {
-  "Explain my latest medical bill": "Based on your most recent bill from City Hospital:\n\n• **MRI Scan (Contrast)**: Billed $3,500 — Fair market value is ~$1,200. This appears significantly overcharged.\n• **Room & Board**: $4,000 — This is within the expected range.\n• **Consultation Fee**: $800 — Typical range is $200–$400.\n\nOverall, you may be overpaying by approximately **$4,300**. Would you like me to help you draft a dispute letter?",
-  "I have a persistent headache": "I'm sorry to hear that. Here are a few questions to help narrow things down:\n\n1. **Duration**: How long have you had this headache?\n2. **Location**: Is it one-sided, frontal, or all over?\n3. **Severity**: On a scale of 1–10, how would you rate the pain?\n4. **Other symptoms**: Any nausea, vision changes, or sensitivity to light?\n\nBased on your answers, I can suggest whether you should see a primary care doctor, neurologist, or visit urgent care. In the meantime, stay hydrated and rest in a dark, quiet room.",
-  "Find urgent care near me": "I found **3 urgent care facilities** near your saved location (Seattle, WA):\n\n1. **CityMed Urgent Care** — 0.8 mi, ⭐ 4.7, Wait: ~10 min, Cost: $150–$250\n2. **ZoomCare Capitol Hill** — 1.2 mi, ⭐ 4.5, Wait: ~15 min, Cost: $125–$200\n3. **MultiCare Indigo** — 2.1 mi, ⭐ 4.6, Wait: ~5 min, Cost: $175–$300\n\nWould you like directions or more details about any of these?",
-  "What's the fair price for an MRI?": "The fair market price for an **MRI** varies by type and location:\n\n| Type | Low | Average | High |\n|------|-----|---------|------|\n| Brain MRI | $400 | $1,200 | $3,500 |\n| Knee MRI | $350 | $900 | $2,800 |\n| Spine MRI | $500 | $1,400 | $4,000 |\n\n💡 **Tip**: Outpatient imaging centers are typically **40–60% cheaper** than hospital-based facilities. Would you like me to find affordable imaging centers near you?",
-  "Compare treatment options for knee pain": "Here are common treatment paths for knee pain, ranked by invasiveness:\n\n1. **Physical Therapy** — $50–150/session, 6–12 sessions. Best for mild to moderate pain.\n2. **Corticosteroid Injection** — $100–350 per injection. Provides 3–6 months of relief.\n3. **PRP Therapy** — $500–2,000. Uses your own blood to promote healing.\n4. **Arthroscopic Surgery** — $5,000–15,000. For meniscus tears or cartilage damage.\n5. **Total Knee Replacement** — $30,000–70,000. Last resort for severe arthritis.\n\nBased on your profile (mild asthma, no surgical history), I'd recommend starting with **physical therapy**. Would you like me to find providers?"
+  return (
+    <div className="result-card glass-card">
+      <div className="rc-header">
+        <Sparkles size={20} className="rc-icon" />
+        <h3>Your Personalized Cost Estimate</h3>
+      </div>
+      
+      <p className="rc-explanation">{result.ai_explanation}</p>
+      
+      <div className="rc-summary-row">
+        <div className="rc-stat-box">
+          <span className="rc-stat-label">Estimated Range</span>
+          <strong className="rc-stat-value primary">
+            {formatINR(summary.estimated_cost_range[0])} - {formatINR(summary.estimated_cost_range[1])}
+          </strong>
+        </div>
+        <div className="rc-stat-box">
+          <span className="rc-stat-label">Budget Fit</span>
+          <strong className={`rc-stat-value ${summary.budget_fit ? 'success' : 'warning'}`}>
+            {summary.budget_fit ? 'Within Budget ✓' : 'Exceeds Budget ⚠️'}
+          </strong>
+        </div>
+      </div>
+      
+      <div className="rc-insurance-note">
+        <ShieldCheck size={16} />
+        <span>{summary.insurance_note}</span>
+      </div>
+
+      <div className="rc-hospitals">
+        <h4 className="rc-hospitals-title">Top Recommended Hospitals</h4>
+        <div className="rc-hospital-list">
+          {hospitals.map((h, i) => (
+            <motion.div 
+              key={i} 
+              className="rc-hospital-item"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <div className="rc-hospital-info">
+                <div className="rc-h-name">
+                  <Building size={16} />
+                  <strong>{h.hospital_name}</strong>
+                  {i === 0 && <span className="rc-badge-best">Best Value</span>}
+                </div>
+                <div className="rc-h-stats">
+                  <span><ActivitySquare size={13} /> {h.success_rate * 100}% Success</span>
+                  <span><CheckCircle2 size={13} /> {h.recovery_days} days recovery</span>
+                </div>
+              </div>
+              
+              <div className="rc-hospital-cost">
+                <span className="rc-h-cost-total">Total: {formatINR(h.personalized_cost)}</span>
+                {h.insurance_accepted && h.amount_covered > 0 ? (
+                  <div className="rc-h-covered-breakdown">
+                    <span className="rc-text-success">Ins. Covers: {formatINR(h.amount_covered)}</span>
+                    <strong className="rc-text-oop">You Pay: {formatINR(h.patient_out_of_pocket)}</strong>
+                  </div>
+                ) : (
+                  <span className="rc-text-oop">No Insurance Coverage</span>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const ChatAssistant = () => {
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const { user } = useAuth();
+  const location = useLocation();
+  const initialMessage = location.state?.initialMessage || null;
+  
+  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  
+  // State from RAG backend
+  const [sessionId, setSessionId] = useState(null);
+  const [suggestedOptions, setSuggestedOptions] = useState(DEFAULT_CHIPS);
+  const [isComplete, setIsComplete] = useState(false);
+  
   const messagesEndRef = useRef(null);
-
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
 
-  const handleSend = (text) => {
-    if (!text.trim()) return;
+  // Initialize chat on mount
+  useEffect(() => {
+    let active = true;
+    const initChat = async () => {
+      setIsTyping(true);
+      try {
+        const patientId = user?.patient_id || null;
+        const msgToSend = initialMessage || null;
+        
+        const res = await sendRagMessage(patientId, null, msgToSend);
+        if (!active) return;
+        
+        setSessionId(res.session_id);
+        
+        // If initialMessage was provided, we want to show it as a user message first
+        const newMessages = [];
+        if (msgToSend) {
+          newMessages.push({ id: Date.now() - 1, sender: 'user', text: msgToSend });
+        }
+        
+        newMessages.push({ id: Date.now(), sender: 'assistant', text: res.reply, result: res.result });
+        
+        setMessages(newMessages);
+        setSuggestedOptions(res.suggested_options || []);
+        setIsComplete(res.is_complete);
+        
+      } catch (err) {
+        if (!active) return;
+        setMessages([{ id: Date.now(), sender: 'assistant', text: "Sorry, I couldn't connect to the server. Please try again later." }]);
+      } finally {
+        if (active) setIsTyping(false);
+      }
+    };
+    initChat();
+    return () => { active = false; };
+  }, [user, initialMessage]); // Only run on mount or when initial params change
+
+  const handleSend = async (text) => {
+    if (!text.trim() || isTyping || isComplete) return;
+    
+    // Add user message
     setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
     setInputValue('');
     setIsTyping(true);
+    setSuggestedOptions([]); // hide chips while typing
 
-    const responseText = SIMULATED_RESPONSES[text] ||
-      `I understand you're asking about: "${text}". Let me look into that for you.\n\nBased on HealthClear's database, I'm cross-referencing treatment costs, provider ratings, and your medical profile to give you the most relevant information. In a production environment, this would connect to our FastAPI backend for real-time analysis.`;
-
-    setTimeout(() => {
+    try {
+      const res = await sendRagMessage(user?.patient_id || null, sessionId, text);
+      
+      setSessionId(res.session_id);
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        sender: 'assistant', 
+        text: res.reply,
+        result: res.result 
+      }]);
+      setSuggestedOptions(res.suggested_options || []);
+      setIsComplete(res.is_complete);
+    } catch (err) {
+      setMessages(prev => [...prev, { id: Date.now(), sender: 'assistant', text: "Sorry, there was an error processing your request." }]);
+      setSuggestedOptions(DEFAULT_CHIPS);
+    } finally {
       setIsTyping(false);
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'assistant', text: responseText }]);
-    }, 1500 + Math.random() * 1000);
+    }
   };
 
   return (
@@ -62,7 +185,7 @@ const ChatAssistant = () => {
           </div>
           <div>
             <h2>HealthClear Assistant</h2>
-            <span className="badge badge-primary"><Sparkles size={12} /> AI Powered</span>
+            <span className="badge badge-primary"><Sparkles size={12} /> AI Powered Cost Estimator</span>
           </div>
         </div>
 
@@ -72,7 +195,7 @@ const ChatAssistant = () => {
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                className={`msg ${msg.sender}`}
+                className={`msg ${msg.sender} ${msg.result ? 'msg-with-result' : ''}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
@@ -80,9 +203,17 @@ const ChatAssistant = () => {
                 {msg.sender === 'assistant' && (
                   <div className="msg-avatar assistant-av"><Activity size={14} /></div>
                 )}
-                <div className="msg-bubble">
-                  <p>{msg.text}</p>
+                
+                <div className={msg.result ? 'msg-content-wrapper result-wrapper' : 'msg-content-wrapper'}>
+                  {msg.text && (
+                    <div className="msg-bubble">
+                      <p>{msg.text}</p>
+                    </div>
+                  )}
+                  
+                  {msg.result && <ResultCard result={msg.result} />}
                 </div>
+
                 {msg.sender === 'user' && (
                   <div className="msg-avatar user-av"><User size={14} /></div>
                 )}
@@ -101,23 +232,25 @@ const ChatAssistant = () => {
 
         {/* Input */}
         <div className="chat-foot">
-          <div className="chip-row">
-            {ACTION_CHIPS.map((chip, i) => (
-              <button key={i} className="chip" onClick={() => handleSend(chip)} disabled={isTyping}>
-                {chip}
-              </button>
-            ))}
-          </div>
+          {suggestedOptions.length > 0 && !isComplete && (
+            <div className="chip-row">
+              {suggestedOptions.map((chip, i) => (
+                <button key={i} className="chip" onClick={() => handleSend(chip)} disabled={isTyping}>
+                  {chip}
+                </button>
+              ))}
+            </div>
+          )}
+          
           <form className="chat-form" onSubmit={(e) => { e.preventDefault(); handleSend(inputValue); }}>
-            <button type="button" className="btn-icon attach-btn" aria-label="Attach document">
-              <Paperclip size={20} />
-            </button>
-            <input type="text" className="chat-input" placeholder="Ask about costs, treatments, or bills..."
-              value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={isTyping}
+            <input type="text" className="chat-input" 
+              placeholder={isComplete ? "Estimation complete. Start a new chat to begin again." : "Type your answer or question here..."}
+              value={inputValue} onChange={(e) => setInputValue(e.target.value)} 
+              disabled={isTyping || isComplete}
               aria-label="Type your message" />
             <button type="submit"
-              className={`btn-icon send-btn ${inputValue.trim() ? 'ready' : ''}`}
-              disabled={!inputValue.trim() || isTyping}
+              className={`btn-icon send-btn ${inputValue.trim() && !isComplete ? 'ready' : ''}`}
+              disabled={!inputValue.trim() || isTyping || isComplete}
               aria-label="Send message">
               <Send size={20} />
             </button>

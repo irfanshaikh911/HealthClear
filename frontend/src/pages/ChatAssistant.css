@@ -214,3 +214,224 @@
   .chat-page { height: calc(100vh - 90px); }
   .chat-container { border-radius: 0; }
 }
+
+/* =========================================
+   Result Card (Cost Estimation UI)
+========================================= */
+
+.msg-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.msg-with-result {
+  width: 100%;
+  max-width: 95%; /* allow result to be wider */
+}
+
+.result-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 1.1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.rc-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-primary);
+}
+
+.rc-header h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.rc-icon {
+  fill: var(--color-primary-muted);
+}
+
+.rc-explanation {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.rc-summary-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.rc-stat-box {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-default);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rc-stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.rc-stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.rc-stat-value.primary { color: var(--color-primary); }
+.rc-stat-value.success { color: var(--color-success); }
+.rc-stat-value.warning { color: var(--color-warning); }
+
+.rc-insurance-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: var(--bg-surface-hover);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary);
+}
+.rc-insurance-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-primary);
+}
+
+.rc-hospitals {
+  margin-top: 0.5rem;
+}
+
+.rc-hospitals-title {
+  font-size: 1.05rem;
+  margin: 0 0 1rem 0;
+  color: var(--text-body);
+}
+
+.rc-hospital-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rc-hospital-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  transition: all var(--duration-fast);
+}
+.rc-hospital-item:hover {
+  border-color: var(--color-primary-muted);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.rc-hospital-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rc-h-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+  color: var(--text-body);
+}
+.rc-h-name svg { color: var(--text-faint); }
+
+.rc-badge-best {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  background: var(--color-success);
+  color: white;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  margin-left: 0.4rem;
+}
+
+.rc-h-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.rc-h-stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.rc-hospital-cost {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  text-align: right;
+}
+
+.rc-h-cost-total {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.rc-h-covered-breakdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.rc-text-success {
+  font-size: 0.85rem;
+  color: var(--color-success);
+}
+
+.rc-text-oop {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+  .rc-hospital-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .rc-hospital-cost {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-default);
+  }
+}
+

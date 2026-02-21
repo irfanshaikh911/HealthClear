@@ -52,6 +52,21 @@ export async function submitOnboarding(userId, patientData) {
   return res.json();
 }
 
+// ── AI Assistant ─────────────────────────────────────────────
+
+export async function sendRagMessage(patientId, sessionId, message) {
+  const res = await fetch('/api/assistant/rag-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patient_id: patientId, session_id: sessionId, message }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Assistant request failed');
+  }
+  return res.json();
+}
+
 // ── Bill Verification ────────────────────────────────────────
 
 const BILLS_BASE = '/api/bills';
