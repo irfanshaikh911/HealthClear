@@ -21,7 +21,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  background: var(--bg-surface);
+  background: var(--glass-bg-strong);
   border: 1px solid var(--border-default);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
@@ -79,7 +79,7 @@
   100% { transform: translate(30px, -40px) scale(1.08); }
 }
 
-/* Login Card */
+/* Login Card — article-pattern glass */
 .login-card {
   position: relative;
   z-index: 1;
@@ -89,6 +89,15 @@
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  /* Glass overrides per article */
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border-edge);
+  border-left: 1px solid var(--glass-border-edge);
 }
 
 .login-header {
