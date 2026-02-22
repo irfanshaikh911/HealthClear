@@ -16,7 +16,7 @@ const DEFAULT_CHIPS = [
 const ResultCard = ({ result }) => {
   const summary = result.personalized_summary;
   const hospitals = result.hospital_comparison;
-  
+
   const formatINR = (amt) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
 
   return (
@@ -25,9 +25,9 @@ const ResultCard = ({ result }) => {
         <Sparkles size={20} className="rc-icon" />
         <h3>Your Personalized Cost Estimate</h3>
       </div>
-      
+
       <p className="rc-explanation">{result.ai_explanation}</p>
-      
+
       <div className="rc-summary-row">
         <div className="rc-stat-box">
           <span className="rc-stat-label">Estimated Range</span>
@@ -42,7 +42,7 @@ const ResultCard = ({ result }) => {
           </strong>
         </div>
       </div>
-      
+
       <div className="rc-insurance-note">
         <ShieldCheck size={16} />
         <span>{summary.insurance_note}</span>
@@ -52,8 +52,8 @@ const ResultCard = ({ result }) => {
         <h4 className="rc-hospitals-title">Top Recommended Hospitals</h4>
         <div className="rc-hospital-list">
           {hospitals.map((h, i) => (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               className="rc-hospital-item"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -70,7 +70,7 @@ const ResultCard = ({ result }) => {
                   <span><CheckCircle2 size={13} /> {h.recovery_days} days recovery</span>
                 </div>
               </div>
-              
+
               <div className="rc-hospital-cost">
                 <span className="rc-h-cost-total">Total: {formatINR(h.personalized_cost)}</span>
                 {h.insurance_accepted && h.amount_covered > 0 ? (
@@ -94,16 +94,16 @@ const ChatAssistant = () => {
   const { user } = useAuth();
   const location = useLocation();
   const initialMessage = location.state?.initialMessage || null;
-  
+
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  
+
   // State from RAG backend
   const [sessionId, setSessionId] = useState(null);
   const [suggestedOptions, setSuggestedOptions] = useState(DEFAULT_CHIPS);
   const [isComplete, setIsComplete] = useState(false);
-  
+
   const messagesEndRef = useRef(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
@@ -116,24 +116,24 @@ const ChatAssistant = () => {
       try {
         const patientId = user?.patient_id || null;
         const msgToSend = initialMessage || null;
-        
+
         const res = await sendRagMessage(patientId, null, msgToSend);
         if (!active) return;
-        
+
         setSessionId(res.session_id);
-        
+
         // If initialMessage was provided, we want to show it as a user message first
         const newMessages = [];
         if (msgToSend) {
           newMessages.push({ id: Date.now() - 1, sender: 'user', text: msgToSend });
         }
-        
+
         newMessages.push({ id: Date.now(), sender: 'assistant', text: res.reply, result: res.result });
-        
+
         setMessages(newMessages);
         setSuggestedOptions(res.suggested_options || []);
         setIsComplete(res.is_complete);
-        
+
       } catch (err) {
         if (!active) return;
         setMessages([{ id: Date.now(), sender: 'assistant', text: "Sorry, I couldn't connect to the server. Please try again later." }]);
@@ -147,7 +147,7 @@ const ChatAssistant = () => {
 
   const handleSend = async (text) => {
     if (!text.trim() || isTyping || isComplete) return;
-    
+
     // Add user message
     setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
     setInputValue('');
@@ -156,13 +156,13 @@ const ChatAssistant = () => {
 
     try {
       const res = await sendRagMessage(user?.patient_id || null, sessionId, text);
-      
+
       setSessionId(res.session_id);
-      setMessages(prev => [...prev, { 
-        id: Date.now(), 
-        sender: 'assistant', 
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        sender: 'assistant',
         text: res.reply,
-        result: res.result 
+        result: res.result
       }]);
       setSuggestedOptions(res.suggested_options || []);
       setIsComplete(res.is_complete);
@@ -203,14 +203,14 @@ const ChatAssistant = () => {
                 {msg.sender === 'assistant' && (
                   <div className="msg-avatar assistant-av"><Activity size={14} /></div>
                 )}
-                
+
                 <div className={msg.result ? 'msg-content-wrapper result-wrapper' : 'msg-content-wrapper'}>
                   {msg.text && (
                     <div className="msg-bubble">
                       <p>{msg.text}</p>
                     </div>
                   )}
-                  
+
                   {msg.result && <ResultCard result={msg.result} />}
                 </div>
 
@@ -241,11 +241,11 @@ const ChatAssistant = () => {
               ))}
             </div>
           )}
-          
+
           <form className="chat-form" onSubmit={(e) => { e.preventDefault(); handleSend(inputValue); }}>
-            <input type="text" className="chat-input" 
+            <input type="text" className="chat-input"
               placeholder={isComplete ? "Estimation complete. Start a new chat to begin again." : "Type your answer or question here..."}
-              value={inputValue} onChange={(e) => setInputValue(e.target.value)} 
+              value={inputValue} onChange={(e) => setInputValue(e.target.value)}
               disabled={isTyping || isComplete}
               aria-label="Type your message" />
             <button type="submit"

@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+python-dotenv
+aiofiles
+httpx
+supabase
+groq
+PyPDF2
+Pillow
+langchain-groq
+langchain-core
