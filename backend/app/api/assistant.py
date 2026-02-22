@@ -9,11 +9,13 @@ GET  /api/assistant/history/{session_id}          Session history
 import json
 import os
 import uuid
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel
 
 from app.db.supabase import get_supabase
 from app.core.config import settings
@@ -26,6 +28,8 @@ from app.schemas.assistant import (
     PersonalizedSummary,
     RagChatMessage,
     RagChatResponse,
+    DoctorRecommendationResult,
+    DoctorInfo
 )
 from app.services.risk_engine import calculate_total_risk
 from app.services.cost_engine import (
@@ -47,8 +51,9 @@ from app.services.rag_service import (
     build_patient_context,
     process_rag_turn,
     generate_rag_opening,
-    generate_field_options,
+    build_doctor_recommendation,
     REQUIRED_FIELDS,
+    generate_field_options,
 )
 from app.services.memory_service import (
     init_history,
@@ -177,6 +182,18 @@ def chat(message: ChatMessage, client: Client = Depends(get_supabase)):
 
 
 # ── Cost engine runner ────────────────────────────────────────────────────────
+
+class RagChatResponse(BaseModel):
+    session_id: str
+    reply: str
+    missing_fields: list = []
+    collected: dict = {}
+    is_complete: bool = False
+    result: Optional[ChatResponse] = None
+    doctor_result: Optional[DoctorRecommendationResult] = None
+    next_field: Optional[str] = None
+    suggested_options: list = []
+    recommendation_type: Optional[str] = None
 
 def _run_cost_engine(
     session_id: str,
@@ -404,7 +421,7 @@ def _estimate_procedure_with_groq(procedure_name: str, client: Client) -> Proced
 def rag_chat(message: RagChatMessage, client: Client = Depends(get_supabase)):
     """Free-form conversational chatbot using RAG."""
 
-    # START NEW RAG SESSION
+    # ── START NEW SESSION ─────────────────────────────────────────────────
     if not message.session_id:
         session_id = str(uuid.uuid4())
 
@@ -451,87 +468,191 @@ def rag_chat(message: RagChatMessage, client: Client = Depends(get_supabase)):
             suggested_options=opts,
         )
 
-    # CONTINUE EXISTING RAG SESSION
+    # ── CONTINUE SESSION ──────────────────────────────────────────────────
     session_id = message.session_id
-    rag_state = _rag_sessions.get(session_id)
-    if not rag_state:
+    state = _rag_sessions.get(session_id)
+    if not state:
         raise HTTPException(
             status_code=404,
-            detail="RAG session not found. Please start a new session.",
+            detail="Session not found. Please start a new session by sending an empty payload or just patient_id.",
         )
 
     if not message.message:
         raise HTTPException(
             status_code=422,
-            detail="Provide 'message' when continuing an existing RAG session.",
+            detail="Provide 'message' when continuing an existing session.",
         )
 
     user_msg = message.message
 
+    # Save user turn to Supabase
     try:
         append_message(client, session_id, "user", user_msg)
     except Exception:
         pass
 
-    turn_result = process_rag_turn(
+    # ── Core RAG turn ─────────────────────────────────────────────────────
+    turn = process_rag_turn(
         user_message=user_msg,
-        collected=rag_state["collected"],
-        knowledge_context=rag_state["knowledge_ctx"],
-        patient_context=rag_state["patient_ctx"],
-        message_history=rag_state["messages"],
+        collected=state["collected"],
+        knowledge_context=state["knowledge_ctx"],
+        patient_context=state["patient_ctx"],
+        message_history=state["messages"],
     )
 
-    rag_state["collected"] = turn_result["collected"]
-    rag_state["messages"].append({"role": "user", "content": user_msg})
-    rag_state["messages"].append({"role": "assistant", "content": turn_result["reply"]})
+    # Update in-memory state
+    state["collected"] = turn["collected"]
+    state["messages"].append({"role": "user", "content": user_msg})
+    state["messages"].append({"role": "assistant", "content": turn["reply"]})
 
+    # Persist assistant reply + snapshot of collected answers
     try:
-        append_message(client, session_id, "assistant", turn_result["reply"])
-        save_answers(client, session_id, rag_state["collected"])
+        append_message(client, session_id, "assistant", turn["reply"])
+        save_answers(client, session_id, state["collected"])
     except Exception:
         pass
 
-    # All fields collected — run cost engine
-    if turn_result["is_complete"]:
+    # ── NOT COMPLETE YET — return next question ───────────────────────────
+    if not turn["is_complete"]:
+        return RagChatResponse(
+            session_id=session_id,
+            reply=turn["reply"],
+            missing_fields=turn.get("missing", []),
+            collected=state["collected"],
+            is_complete=False,
+            next_field=turn.get("next_field"),
+            suggested_options=turn.get("suggested_options", []),
+            recommendation_type=state["collected"].get("recommendation_type"),
+        )
+
+    # ── COMPLETE — branch on recommendation_type ──────────────────────────
+    rec_type = state["collected"].get("recommendation_type", "gp")
+
+    if rec_type == "hospital":
+        return _handle_hospital_path(session_id, state, turn, client)
+    else:
+        return _handle_doctor_path(session_id, state, turn, client)
+
+
+# ── Hospital path ─────────────────────────────────────────────────────────────
+
+def _handle_hospital_path(
+    session_id: str,
+    state: dict,
+    turn: dict,
+    client: Client,
+) -> RagChatResponse:
+    """Run existing cost engine for hospital/surgery recommendations."""
+    try:
+        q_response = _run_cost_engine(
+            session_id=session_id,
+            answers=state["collected"],
+            client=client,
+            patient_id=state.get("patient_id"),
+        )
+        return RagChatResponse(
+            session_id=session_id,
+            reply=turn["reply"],
+            collected=state["collected"],
+            is_complete=True,
+            result=q_response.result,
+            recommendation_type="hospital",
+            suggested_options=[
+                "Tell me more about the top hospital",
+                "Compare costs in detail",
+                "Find a doctor instead",
+                "Start over",
+            ],
+        )
+    except HTTPException as e:
+        return RagChatResponse(
+            session_id=session_id,
+            reply=f"I ran into an issue finding hospitals: {e.detail} Could you double-check your city or procedure name?",
+            collected=state["collected"],
+            is_complete=False,
+            suggested_options=["Try a different city", "Tell me the procedure name"],
+        )
+
+
+# ── Doctor path ───────────────────────────────────────────────────────────────
+
+def _handle_doctor_path(
+    session_id: str,
+    state: dict,
+    turn: dict,
+    client: Client,
+) -> RagChatResponse:
+    """
+    Find doctor recommendations when surgery is NOT needed.
+    """
+    
+    try:
+        doc_result_raw = build_doctor_recommendation(state["collected"], client)
+
+        # Validate / coerce doctor dicts into DoctorInfo
+        doctors = [
+            DoctorInfo(
+                doctor_name=d.get("doctor_name", "Unknown"),
+                specialization=d.get("specialization"),
+                experience=d.get("experience"),
+                city=d.get("city"),
+                clinic=d.get("clinic"),
+                consultation_fee=d.get("consultation_fee"),
+            )
+            for d in doc_result_raw.get("doctors", [])
+        ]
+
+        doc_result = DoctorRecommendationResult(
+            type="doctor_recommendation",
+            specialization=doc_result_raw.get("specialization", "General Physician"),
+            triage_reason=doc_result_raw.get("triage_reason", ""),
+            doctors=doctors,
+            ai_explanation=doc_result_raw.get("ai_explanation", ""),
+            prior_consultation_note=doc_result_raw.get("prior_consultation_note", ""),
+        )
+
+        # Persist result to Supabase
         try:
-            q_response = _run_cost_engine(
-                session_id=session_id,
-                answers=rag_state["collected"],
-                client=client,
-                patient_id=rag_state.get("patient_id"),
-            )
-            return RagChatResponse(
-                session_id=session_id,
-                reply=turn_result["reply"],
-                missing_fields=[],
-                collected=rag_state["collected"],
-                is_complete=True,
-                result=q_response.result,
-                next_field=None,
-                suggested_options=[],
-            )
-        except HTTPException as e:
-            return RagChatResponse(
-                session_id=session_id,
-                reply=f"Sorry, I ran into an issue: {e.detail} Could you double-check your city or procedure?",
-                missing_fields=[],
-                collected=rag_state["collected"],
-                is_complete=False,
-                next_field=None,
-                suggested_options=[],
+            save_result(client, session_id, {
+                "type": "doctor_recommendation",
+                "specialization": doc_result.specialization,
+                "doctors": [d.model_dump() for d in doctors],
+                "ai_explanation": doc_result.ai_explanation,
+            })
+        except Exception:
+            pass
+
+        # Craft a reply that bridges the questionnaire to the results
+        bridge_reply = turn["reply"]
+        if not bridge_reply.strip():
+            bridge_reply = (
+                f"Based on everything you've shared, here are my top {doc_result.specialization} "
+                f"recommendations in {state['collected'].get('city', 'your city')}. "
+                + (doc_result.prior_consultation_note or "")
             )
 
-    next_f = turn_result.get("next_field")
-    opts = generate_field_options(next_f, rag_state["knowledge_ctx"], rag_state["collected"]) if next_f else []
-    return RagChatResponse(
-        session_id=session_id,
-        reply=turn_result["reply"],
-        missing_fields=turn_result["missing"],
-        collected=rag_state["collected"],
-        is_complete=False,
-        next_field=next_f,
-        suggested_options=opts,
-    )
+        return RagChatResponse(
+            session_id=session_id,
+            reply=bridge_reply,
+            collected=state["collected"],
+            is_complete=True,
+            doctor_result=doc_result,
+            recommendation_type=state["collected"].get("recommendation_type", "gp"),
+            suggested_options=[
+                "Tell me more about the top doctor",
+                "I actually need a hospital instead",
+                "Ask another health question",
+                "Start over",
+            ],
+        )
+
+    except Exception as e:
+        return RagChatResponse(
+            session_id=session_id,
+            reply=f"I had trouble finding doctors right now: {str(e)}. Please try again or specify a different city.",
+            collected=state["collected"],
+            is_complete=False,
+        )
 
 
 # ── History endpoints ─────────────────────────────────────────────────────────

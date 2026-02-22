@@ -1,43 +1,35 @@
 """Application settings loaded from environment variables."""
 
-from functools import lru_cache
+"""Application settings loaded from environment variables."""
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
-class Settings(BaseSettings):
-    """All configuration is read from environment / .env file."""
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
-
+class Settings:
+    """All configuration is read from environment / .env file using python-dotenv."""
+    
     # ── Supabase ──────────────────────────────────────────────
-    PUBLIC_SUPABASE_URL: str
-    PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: str
+    PUBLIC_SUPABASE_URL: str = os.getenv("PUBLIC_SUPABASE_URL", "")
+    PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: str = os.getenv("PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "")
 
     # ── Groq ──────────────────────────────────────────────────
-    GROQ_API_KEY: str
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 
     # ── File uploads ──────────────────────────────────────────
-    UPLOAD_DIR: str = "uploads"
-    MAX_FILE_SIZE_MB: int = 10
-    ALLOWED_EXTENSIONS: str = "jpg,jpeg,png,pdf,bmp,tiff"
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
+    MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "10"))
+    ALLOWED_EXTENSIONS: str = os.getenv("ALLOWED_EXTENSIONS", "jpg,jpeg,png,pdf,bmp,tiff")
 
     # ── App metadata ──────────────────────────────────────────
-    APP_NAME: str = "HealthClear Bill Verification"
-    DEBUG: bool = False
+    APP_NAME: str = os.getenv("APP_NAME", "HealthClear Bill Verification")
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
     @property
     def allowed_extensions_list(self) -> list[str]:
         return [ext.strip() for ext in self.ALLOWED_EXTENSIONS.split(",")]
 
 
-@lru_cache()
-def get_settings() -> Settings:
-    return Settings()
-
-
-settings = get_settings()
+settings = Settings()

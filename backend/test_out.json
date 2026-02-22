@@ -1,0 +1,175 @@
+{
+  "step1": {
+    "session_id": "c48eb616-5846-4272-97de-29cf055b386e",
+    "reply": "Hello Anita, I'm so glad you're here. I see you're managing asthma and have a penicillin allergy, so we'll definitely keep that in mind as we chat. \n\nYou can use this space to ask me any questions you have about your health or medications, like how to manage your asthma symptoms or potential interactions with your current medications. Alternatively, if you're looking for a doctor or hospital recommendation, I'd be happy to help with that as well - whether it's for a routine check-up or something more specific.\n\nFeel free to type away, you don't need to click on any options or follow any prompts - just let me know what's on your mind. What can I help you with today?",
+    "missing_fields": [
+      "has_insurance",
+      "symptom",
+      "city",
+      "budget",
+      "urgency"
+    ],
+    "collected": {
+      "age": 27,
+      "gender": "female",
+      "comorbidities": []
+    },
+    "is_complete": false,
+    "result": null,
+    "doctor_result": null,
+    "next_field": "has_insurance",
+    "suggested_options": [
+      "Yes \u2014 government (Ayushman Bharat)",
+      "Yes \u2014 private insurance",
+      "No insurance"
+    ],
+    "recommendation_type": null
+  },
+  "step2": {
+    "session_id": "c48eb616-5846-4272-97de-29cf055b386e",
+    "reply": "That's a great question. Based on what you've described, I'd recommend consulting a doctor who can examine you properly. Would you like me to find a suitable specialist near you?\n\n---\nWould you like me to find a doctor or hospital for you? Just say the word.",
+    "missing_fields": [],
+    "collected": {
+      "age": 27,
+      "gender": "female",
+      "comorbidities": [
+        "thyroid"
+      ],
+      "symptom": "thyroid issue",
+      "intent": "general_qa"
+    },
+    "is_complete": false,
+    "result": null,
+    "doctor_result": null,
+    "next_field": null,
+    "suggested_options": [
+      "Find a doctor for me",
+      "Find a hospital",
+      "Ask another question"
+    ],
+    "recommendation_type": null
+  },
+  "step3": {
+    "session_id": "c48eb616-5846-4272-97de-29cf055b386e",
+    "reply": "Anita, how soon are you looking to get treated for your thyroid issue - is it something that needs attention immediately or can it wait a few days?",
+    "missing_fields": [
+      "urgency",
+      "city",
+      "budget",
+      "has_insurance",
+      "preference"
+    ],
+    "collected": {
+      "age": 27,
+      "gender": "female",
+      "comorbidities": [
+        "thyroid"
+      ],
+      "symptom": "thyroid issue",
+      "intent": "doctor"
+    },
+    "is_complete": false,
+    "result": null,
+    "doctor_result": null,
+    "next_field": "urgency",
+    "suggested_options": [
+      "As soon as possible",
+      "Within a few days",
+      "Not urgent"
+    ],
+    "recommendation_type": null
+  },
+  "step4": {
+    "session_id": "c48eb616-5846-4272-97de-29cf055b386e",
+    "reply": "How long have you been experiencing this, and how severe does it feel?",
+    "missing_fields": [
+      "urgency",
+      "city",
+      "budget",
+      "has_insurance",
+      "preference"
+    ],
+    "collected": {
+      "age": 27,
+      "gender": "female",
+      "comorbidities": [
+        "thyroid"
+      ],
+      "symptom": "thyroid issue",
+      "intent": "doctor"
+    },
+    "is_complete": false,
+    "result": null,
+    "doctor_result": null,
+    "next_field": "urgency",
+    "suggested_options": [
+      "Started today \u2014 very urgent",
+      "Few days",
+      "Weeks/months",
+      "Chronic"
+    ],
+    "recommendation_type": null
+  },
+  "step5": {
+    "session_id": "c48eb616-5846-4272-97de-29cf055b386e",
+    "reply": "How long have you been experiencing this, and how severe does it feel?",
+    "missing_fields": [
+      "urgency",
+      "city",
+      "budget",
+      "has_insurance",
+      "preference"
+    ],
+    "collected": {
+      "age": 27,
+      "gender": "female",
+      "comorbidities": [
+        "thyroid"
+      ],
+      "symptom": "thyroid issue",
+      "intent": "doctor"
+    },
+    "is_complete": false,
+    "result": null,
+    "doctor_result": null,
+    "next_field": "urgency",
+    "suggested_options": [
+      "Started today \u2014 very urgent",
+      "Few days",
+      "Weeks/months",
+      "Chronic"
+    ],
+    "recommendation_type": null
+  },
+  "step6": {
+    "session_id": "c48eb616-5846-4272-97de-29cf055b386e",
+    "reply": "How long have you been experiencing this, and how severe does it feel?",
+    "missing_fields": [
+      "urgency",
+      "city",
+      "budget",
+      "has_insurance",
+      "preference"
+    ],
+    "collected": {
+      "age": 27,
+      "gender": "female",
+      "comorbidities": [
+        "thyroid"
+      ],
+      "symptom": "thyroid issue",
+      "intent": "doctor"
+    },
+    "is_complete": false,
+    "result": null,
+    "doctor_result": null,
+    "next_field": "urgency",
+    "suggested_options": [
+      "Started today \u2014 very urgent",
+      "Few days",
+      "Weeks/months",
+      "Chronic"
+    ],
+    "recommendation_type": null
+  }
+}

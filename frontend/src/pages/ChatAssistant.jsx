@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Send, Activity, User, Sparkles, Building, HandCoins, ShieldCheck, ActivitySquare, CheckCircle2 } from 'lucide-react';
+import { Send, Activity, User, Sparkles, Building, HandCoins, ShieldCheck, ActivitySquare, CheckCircle2, Stethoscope, MapPin, Award } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { sendRagMessage } from '../services/api';
 import './ChatAssistant.css';
@@ -90,6 +90,60 @@ const ResultCard = ({ result }) => {
   );
 };
 
+const DoctorResultCard = ({ result }) => {
+  const doctors = result.doctors || [];
+
+  return (
+    <div className="result-card glass-card doctor-card-override">
+      <div className="rc-header">
+        <Stethoscope size={20} className="rc-icon" />
+        <h3>Recommended Specialists</h3>
+      </div>
+
+      <p className="rc-explanation">{result.ai_explanation}</p>
+
+      {result.prior_consultation_note && (
+        <div className="rc-insurance-note doc-note">
+          <ActivitySquare size={16} />
+          <span>{result.prior_consultation_note}</span>
+        </div>
+      )}
+
+      <div className="rc-hospitals">
+        <h4 className="rc-hospitals-title">Top {result.specialization} Doctors</h4>
+        <div className="rc-hospital-list">
+          {doctors.map((d, i) => (
+            <motion.div
+              key={i}
+              className="rc-hospital-item"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <div className="rc-hospital-info">
+                <div className="rc-h-name">
+                  <User size={16} />
+                  <strong>Dr. {d.doctor_name}</strong>
+                  {i === 0 && <span className="rc-badge-best">Top Match</span>}
+                </div>
+                <div className="rc-h-stats">
+                  <span><Award size={13} /> {d.experience} Exp</span>
+                  <span><MapPin size={13} /> {d.city}</span>
+                </div>
+              </div>
+
+              <div className="rc-hospital-cost">
+                <span className="rc-h-cost-total">Fee: {d.consultation_fee}</span>
+                <span className="rc-text-oop">{d.clinic || "Private Clinic"}</span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ChatAssistant = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -128,7 +182,13 @@ const ChatAssistant = () => {
           newMessages.push({ id: Date.now() - 1, sender: 'user', text: msgToSend });
         }
 
-        newMessages.push({ id: Date.now(), sender: 'assistant', text: res.reply, result: res.result });
+        newMessages.push({ 
+          id: Date.now(), 
+          sender: 'assistant', 
+          text: res.reply, 
+          result: res.result,
+          doctor_result: res.doctor_result 
+        });
 
         setMessages(newMessages);
         setSuggestedOptions(res.suggested_options || []);
@@ -162,7 +222,8 @@ const ChatAssistant = () => {
         id: Date.now(),
         sender: 'assistant',
         text: res.reply,
-        result: res.result
+        result: res.result,
+        doctor_result: res.doctor_result
       }]);
       setSuggestedOptions(res.suggested_options || []);
       setIsComplete(res.is_complete);
@@ -212,6 +273,7 @@ const ChatAssistant = () => {
                   )}
 
                   {msg.result && <ResultCard result={msg.result} />}
+                  {msg.doctor_result && <DoctorResultCard result={msg.doctor_result} />}
                 </div>
 
                 {msg.sender === 'user' && (

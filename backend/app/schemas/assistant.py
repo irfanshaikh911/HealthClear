@@ -84,6 +84,24 @@ class RagChatMessage(BaseModel):
     message: Optional[str] = None
 
 
+class DoctorInfo(BaseModel):
+    doctor_name: str
+    specialization: Optional[str] = None
+    experience: Optional[str] = None
+    city: Optional[str] = None
+    clinic: Optional[str] = None
+    consultation_fee: Optional[str] = None
+
+
+class DoctorRecommendationResult(BaseModel):
+    type: str = "doctor_recommendation"
+    specialization: str
+    triage_reason: str
+    doctors: list[DoctorInfo]
+    ai_explanation: str
+    prior_consultation_note: str
+
+
 class RagChatResponse(BaseModel):
     session_id: str
     reply: str
@@ -91,5 +109,7 @@ class RagChatResponse(BaseModel):
     collected: dict = {}
     is_complete: bool = False
     result: Optional[ChatResponse] = None
+    doctor_result: Optional[DoctorRecommendationResult] = None
     next_field: Optional[str] = None
     suggested_options: list = []
+    recommendation_type: Optional[str] = None
