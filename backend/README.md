@@ -41,9 +41,10 @@ This is the Python (FastAPI) backend for the Health Clear application.
 
 6. **Start the Development Server**
    ```bash
-   uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+   
    ```
 
 That's it! The backend will start running locally.
 - **API Base URL:** `http://127.0.0.1:8000`
 - **Interactive OpenAPI Docs (Swagger):** `http://127.0.0.1:8000/docs`
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload

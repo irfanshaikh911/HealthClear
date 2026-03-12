@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   MessageSquare, Search, MapPin, FileText, ArrowRight,
-  Sparkles, Send, Star, Shield, Clock, DollarSign, User
+  Sparkles, Send, Star, Shield, Clock, DollarSign, User,
+  Tag, HandHeart, Bed
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Profile.css';
@@ -197,6 +198,30 @@ const Profile = () => {
           <div>
             <h4>Chat History</h4>
             <p>View past assistant conversations</p>
+          </div>
+          <ArrowRight size={18} className="bottom-arrow" />
+        </Link>
+        <Link to="/deals" className="bottom-action glass-card">
+          <div className="bottom-action-icon" style={{ background: 'var(--color-cta)' }}><Tag size={22} /></div>
+          <div>
+            <h4>Medical Deals</h4>
+            <p>Discounts, camps & offers near you</p>
+          </div>
+          <ArrowRight size={18} className="bottom-arrow" />
+        </Link>
+        <Link to="/fundraisers" className="bottom-action glass-card">
+          <div className="bottom-action-icon" style={{ background: 'var(--color-danger)' }}><HandHeart size={22} /></div>
+          <div>
+            <h4>Fundraisers</h4>
+            <p>Discover & contribute to health funds</p>
+          </div>
+          <ArrowRight size={18} className="bottom-arrow" />
+        </Link>
+        <Link to="/icu-beds" className="bottom-action glass-card">
+          <div className="bottom-action-icon" style={{ background: 'var(--color-success)' }}><Bed size={22} /></div>
+          <div>
+            <h4>ICU Beds</h4>
+            <p>Live bed availability across hospitals</p>
           </div>
           <ArrowRight size={18} className="bottom-arrow" />
         </Link>

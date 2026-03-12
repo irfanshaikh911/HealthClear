@@ -1,0 +1,418 @@
+/* ========================
+   FUNDRAISERS & SCHEMES
+   ======================== */
+
+.fund-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ── Header ── */
+.fund-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.fund-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.15rem;
+}
+
+.fund-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* ========================
+   RAISE A FUND CTA
+   ======================== */
+.fund-cta-card {
+    position: relative;
+    padding: 2rem;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-border-edge);
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.fund-cta-glow {
+    position: absolute;
+    top: -60px;
+    left: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--color-cta) 0%, transparent 70%);
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.fund-cta-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.fund-cta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-full);
+    background: var(--color-danger-muted);
+    color: var(--color-danger);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: fit-content;
+}
+
+.fund-cta-content h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.fund-cta-content p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.fund-cta-btn {
+    width: fit-content;
+    margin-top: 0.25rem;
+}
+
+.fund-cta-stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-shrink: 0;
+}
+
+.fund-cta-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.15rem;
+}
+
+.fund-cta-stat strong {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+
+.fund-cta-stat span {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    font-family: var(--font-display);
+    font-weight: 500;
+}
+
+/* ========================
+   SEARCH & TABS
+   ======================== */
+.fund-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.fund-search-wrap {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-full);
+}
+
+.fund-search-icon {
+    color: var(--text-faint);
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.fund-search-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 0.92rem;
+    color: var(--text-body);
+    padding: 0.5rem 0;
+}
+
+.fund-search-input:focus {
+    outline: none;
+}
+
+.fund-search-input::placeholder {
+    color: var(--text-faint);
+}
+
+.fund-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.fund-filter-icon {
+    color: var(--text-faint);
+    margin-right: 0.25rem;
+}
+
+.fund-tab {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-default);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.fund-tab:hover {
+    background: var(--color-primary-muted);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.fund-tab.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+/* ========================
+   FUND GRID
+   ======================== */
+.fund-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.fund-card {
+    position: relative;
+    padding: 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.fund-featured-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-cta), #FB923C);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.fund-card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.fund-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.fund-type-badge[data-type="government"] {
+    background: var(--color-primary-muted);
+    color: var(--color-primary);
+}
+
+.fund-type-badge[data-type="private"] {
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+}
+
+.fund-type-badge[data-type="ngo"] {
+    background: var(--color-warning-muted);
+    color: var(--color-warning);
+}
+
+.fund-cat-label {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    font-family: var(--font-display);
+    font-weight: 500;
+}
+
+.fund-card-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    line-height: 1.3;
+}
+
+.fund-card-organizer {
+    font-size: 0.82rem;
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.fund-card-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Progress Bar ── */
+.fund-progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.fund-progress-bar {
+    width: 100%;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--border-default);
+    overflow: hidden;
+}
+
+.fund-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent-light));
+    transition: width 0.6s var(--ease-out);
+}
+
+.fund-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-family: var(--font-display);
+}
+
+.fund-raised {
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.fund-target {
+    color: var(--text-faint);
+    font-weight: 500;
+}
+
+/* ── Bottom ── */
+.fund-card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-default);
+    gap: 0.5rem;
+}
+
+.fund-beneficiaries {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.fund-contribute-btn {
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+}
+
+/* ── Empty State ── */
+.fund-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    gap: 0.75rem;
+    color: var(--text-faint);
+}
+
+.fund-empty h3 {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.fund-empty p {
+    font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .fund-cta-card {
+        flex-direction: column;
+    }
+
+    .fund-cta-stats {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .fund-controls {
+        flex-direction: column;
+    }
+
+    .fund-search-wrap {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .fund-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fund-tabs {
+        flex-wrap: wrap;
+    }
+}

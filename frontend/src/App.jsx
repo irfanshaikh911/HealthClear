@@ -13,6 +13,9 @@ import BillAnalysis from './pages/BillAnalysis';
 import FindTreatment from './pages/FindTreatment';
 import ChatAssistant from './pages/ChatAssistant';
 import Settings from './pages/Settings';
+import MedicalDeals from './pages/MedicalDeals';
+import Fundraisers from './pages/Fundraisers';
+import ICUBeds from './pages/ICUBeds';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -42,6 +45,9 @@ function AppRoutes() {
           <Route path="/find-treatment" element={<FindTreatment />} />
           <Route path="/assistant" element={<ProtectedRoute><ChatAssistant /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/deals" element={<MedicalDeals />} />
+          <Route path="/fundraisers" element={<Fundraisers />} />
+          <Route path="/icu-beds" element={<ICUBeds />} />
         </Routes>
       </AnimatePresence>
     </Layout>

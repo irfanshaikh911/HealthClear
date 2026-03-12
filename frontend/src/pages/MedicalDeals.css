@@ -1,0 +1,348 @@
+/* ========================
+   MEDICAL DEALS & ALERTS
+   ======================== */
+
+.deals-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Header ── */
+.deals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.deals-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.15rem;
+}
+
+.deals-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ========================
+   CAROUSEL
+   ======================== */
+.deals-carousel {
+  position: relative;
+  padding: 2rem 3.5rem;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border-edge);
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.carousel-glow {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-cta) 0%, transparent 70%);
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.carousel-viewport {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel-slide {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.slide-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: fit-content;
+}
+
+.slide-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-heading);
+}
+
+.slide-provider {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.slide-desc {
+  font-size: 0.92rem;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.slide-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.slide-pricing {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.slide-original {
+  font-size: 1rem;
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.slide-discounted {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--color-success);
+}
+
+.slide-discount-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-cta);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.slide-validity {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+/* ── Arrows ── */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.carousel-arrow:hover {
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.carousel-arrow.prev { left: 0.75rem; }
+.carousel-arrow.next { right: 0.75rem; }
+
+/* ── Dots ── */
+.carousel-dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  opacity: 0.35;
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.carousel-dot.active {
+  opacity: 1;
+  background: var(--color-primary);
+  width: 24px;
+  border-radius: var(--radius-full);
+}
+
+/* ========================
+   ALL DEALS GRID
+   ======================== */
+.deals-grid-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-heading {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.deals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.deal-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.deal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.deal-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deal-discount-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-cta);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.deal-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  line-height: 1.3;
+}
+
+.deal-card-provider {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.deal-card-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.deal-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-default);
+}
+
+.deal-card-pricing {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.deal-orig {
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.deal-final {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--color-success);
+}
+
+.deal-card-validity {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .deals-carousel {
+    padding: 1.5rem 2.5rem;
+    min-height: auto;
+  }
+  .slide-title { font-size: 1.1rem; }
+  .slide-bottom { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .deals-carousel { padding: 1.25rem 2rem; }
+  .carousel-arrow { width: 32px; height: 32px; }
+  .deals-grid { grid-template-columns: 1fr; }
+}

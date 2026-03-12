@@ -647,6 +647,9 @@ def _handle_doctor_path(
         )
 
     except Exception as e:
+        import traceback
+        print(f"❌ _handle_doctor_path error: {e}")
+        traceback.print_exc()
         return RagChatResponse(
             session_id=session_id,
             reply=f"I had trouble finding doctors right now: {str(e)}. Please try again or specify a different city.",

@@ -119,16 +119,19 @@ def build_knowledge_context(client) -> str:
             )
 
     # Doctors
-    d_res = client.table("doctor").select(
-        "doctor_name,specialization,experience,city,consultation_fee,clinic"
-    ).execute()
-    if d_res.data:
-        lines.append("\n=== DOCTORS IN DATABASE ===")
-        for d in d_res.data:
-            lines.append(
-                f"  • Dr. {d['doctor_name']} ({d['specialization']}, {d['experience']}) "
-                f"— {d['city']}, fee {d['consultation_fee']}, clinic: {d.get('clinic','N/A')}"
-            )
+    try:
+        d_res = client.table("doctor").select(
+            "doctor_name,specialization,experience,city,consultation_fee,clinic"
+        ).execute()
+        if d_res.data:
+            lines.append("\n=== DOCTORS IN DATABASE ===")
+            for d in d_res.data:
+                lines.append(
+                    f"  • Dr. {d['doctor_name']} ({d['specialization']}, {d['experience']}) "
+                    f"— {d['city']}, fee {d['consultation_fee']}, clinic: {d.get('clinic','N/A')}"
+                )
+    except Exception:
+        pass  # gracefully skip if doctor table query fails transiently
 
     # Risk conditions
     r_res = client.table("risk_conditions").select("name,cost_multiplier").execute()
@@ -752,6 +755,29 @@ def _generate_completion_message(collected: dict, knowledge_context: str, patien
         return f"Perfect, I have everything I need! Let me find the best options in {city} for {symptom} right away. 🔍"
 
 
+# ── Supabase retry helper ─────────────────────────────────────────────────────
+
+import time as _time
+
+def _supabase_query_with_retry(query_fn, max_retries: int = 3, delay: float = 1.0):
+    """
+    Execute a Supabase query with retry logic to handle transient
+    Cloudflare 1101 / Worker exceptions from Supabase's PostgREST.
+    
+    query_fn: a callable that returns a Supabase query result (call .execute() inside)
+    """
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            result = query_fn()
+            return result.data or []
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries - 1:
+                _time.sleep(delay * (attempt + 1))  # progressive backoff
+    raise last_error
+
+
 # ── Doctor recommendation builder (for non-hospital path) ─────────────────────
 
 def build_doctor_recommendation(collected: dict, client) -> dict:
@@ -765,55 +791,55 @@ def build_doctor_recommendation(collected: dict, client) -> dict:
     prev_advice_helped = collected.get("prev_advice_helped", "")
     symptom = collected.get("symptom", "")
 
-    # Fetch matching doctors
+    # Fetch matching doctors (with retry for transient Supabase errors)
     doctors = []
     
     # 1. Try exact city + specialty match
     if city and specialization:
-        doctors = (
-            client.table("doctor")
+        doctors = _supabase_query_with_retry(
+            lambda: client.table("doctor")
             .select("*")
             .ilike("city", f"%{city}%")
             .ilike("specialization", f"%{specialization}%")
             .execute()
-        ).data or []
+        )
 
     # 2. Fallback: try GP in that city
     if not doctors and city:
-        doctors = (
-            client.table("doctor")
+        doctors = _supabase_query_with_retry(
+            lambda: client.table("doctor")
             .select("*")
             .ilike("city", f"%{city}%")
             .ilike("specialization", "%General%")
             .execute()
-        ).data or []
+        )
         
     # 3. Last resort in city: ANY doctor in that city
     if not doctors and city:
-        doctors = (
-            client.table("doctor")
+        doctors = _supabase_query_with_retry(
+            lambda: client.table("doctor")
             .select("*")
             .ilike("city", f"%{city}%")
             .execute()
-        ).data or []
+        )
 
     # 4. Global fallback: Try exact specialty in ANY city
     if not doctors and specialization:
-        doctors = (
-            client.table("doctor")
+        doctors = _supabase_query_with_retry(
+            lambda: client.table("doctor")
             .select("*")
             .ilike("specialization", f"%{specialization}%")
             .execute()
-        ).data or []
+        )
 
     # 5. Ultimate fallback: Any doctor in ANY city
     if not doctors:
-        doctors = (
-            client.table("doctor")
+        doctors = _supabase_query_with_retry(
+            lambda: client.table("doctor")
             .select("*")
             .limit(5)
             .execute()
-        ).data or []
+        )
 
     # Sort: if previous advice didn't help, prefer most experienced
     def _parse_exp(exp_str: str) -> int:
