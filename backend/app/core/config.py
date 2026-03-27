@@ -5,8 +5,11 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+from pathlib import Path
+
+# Load environment variables from backend/.env file
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(env_path, override=True)
 
 class Settings:
     """All configuration is read from environment / .env file using python-dotenv."""
