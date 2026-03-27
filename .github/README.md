@@ -606,6 +606,25 @@ HealthClear/
       <br />
       <sub>💻 Backend & Architecture</sub>
     </td>
+        <td align="center">
+      <a href="https://github.com/Sahil9192">
+        <img src="https://github.com/Sahil9192.png" width="100px;" alt="Yash Potdar"/>
+        <br />
+        <sub><b>Yash Potdar</b></sub>
+      </a>
+      <br />
+      <sub>💻 Backend & Architecture</sub>
+    </td>
+        </td>
+        <td align="center">
+      <a href="https://github.com/UtkarshPingale">
+        <img src="https://github.com/UtkarshPingale.png" width="100px;" alt="Yash Potdar"/>
+        <br />
+        <sub><b>Yash Potdar</b></sub>
+      </a>
+      <br />
+      <sub>💻 Backend & Architecture</sub>
+    </td>
   </tr>
 </table>
 
