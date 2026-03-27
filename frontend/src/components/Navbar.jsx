@@ -27,7 +27,7 @@ const Navbar = () => {
       <nav className="navbar glass-panel" role="navigation" aria-label="Main navigation">
         <Link to="/" className="logo" aria-label="Health Clear Home">
           <div className="logo-mark">
-            <Activity size={20} strokeWidth={2.5} />
+            <img src="/healthclear-logo.png" alt="HealthClear" width={24} height={24} style={{ borderRadius: '4px' }} />
           </div>
           <span className="logo-text">HealthClear</span>
         </Link>

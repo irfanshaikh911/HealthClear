@@ -1,11 +1,16 @@
 /**
- * API helpers — all requests go through the Vite dev proxy (/api → localhost:8000).
+ * API helpers — In dev, requests go through the Vite proxy (/api → localhost:8000).
+ * In production, requests go directly to the deployed backend via VITE_API_URL.
  */
+
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
 
 // ── Auth ─────────────────────────────────────────────────────
 
 export async function loginUser(email, password) {
-  const res = await fetch('/api/auth/login', {
+  const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -18,7 +23,7 @@ export async function loginUser(email, password) {
 }
 
 export async function registerUser(name, email, password) {
-  const res = await fetch('/api/auth/register', {
+  const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password }),
@@ -31,7 +36,7 @@ export async function registerUser(name, email, password) {
 }
 
 export async function getMe(userId) {
-  const res = await fetch(`/api/auth/me/${userId}`);
+  const res = await fetch(`${API_BASE}/auth/me/${userId}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Failed to fetch user');
@@ -40,7 +45,7 @@ export async function getMe(userId) {
 }
 
 export async function submitOnboarding(userId, patientData) {
-  const res = await fetch(`/api/auth/onboarding/${userId}`, {
+  const res = await fetch(`${API_BASE}/auth/onboarding/${userId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patientData),
@@ -55,7 +60,7 @@ export async function submitOnboarding(userId, patientData) {
 // ── AI Assistant ─────────────────────────────────────────────
 
 export async function sendRagMessage(patientId, sessionId, message) {
-  const res = await fetch('/api/assistant/rag-chat', {
+  const res = await fetch(`${API_BASE}/assistant/rag-chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ patient_id: patientId, session_id: sessionId, message }),
@@ -69,7 +74,7 @@ export async function sendRagMessage(patientId, sessionId, message) {
 
 // ── Bill Verification ────────────────────────────────────────
 
-const BILLS_BASE = '/api/bills';
+const BILLS_BASE = `${API_BASE}/bills`;
 
 export async function uploadBill(file) {
   const formData = new FormData();
